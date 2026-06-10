@@ -297,7 +297,7 @@ export default function ProductsPage() {
                       <td className="px-4 py-3">
                         <div className="font-medium flex items-center gap-2">
                           {p.name}
-                          {p.is_low_stock && <AlertTriangle size={13} className="text-amber-500" title="Low stock" />}
+                          {p.is_low_stock && <span title="Low stock"><AlertTriangle size={13} className="text-amber-500" /></span>}
                         </div>
                         <div className="text-xs text-muted">{p.sku ?? "—"}</div>
                       </td>

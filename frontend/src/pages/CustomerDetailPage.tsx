@@ -55,7 +55,6 @@ export default function CustomerDetailPage() {
   );
   if (!customer) return <div className="text-muted text-sm p-4">Loading…</div>;
 
-  const inputCls = "mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
   const totalRevenue = invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.total, 0);
 
   return (

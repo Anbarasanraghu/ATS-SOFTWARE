@@ -64,6 +64,34 @@ export interface StockMovement {
   movement_type: string; quantity: number; unit_cost: number | null;
   reference: string | null; notes: string | null; created_at: string;
 }
+export interface Activity {
+  id: string; entity: string; entity_id: string | null; entity_name: string | null;
+  action: string; detail: Record<string, unknown>; actor: string | null; created_at: string;
+}
+export interface DailyCount { day: string; count: number; }
+export interface DocItem {
+  id?: string; product_id: string | null; description: string;
+  quantity: number; unit_price: number; tax_percent: number; line_total?: number;
+}
+export interface InventoryDoc {
+  id: string; doc_type: "purchase" | "sale"; doc_number: string | null;
+  party_id: string | null; party_name: string | null; doc_date: string;
+  status: string; subtotal: number; tax_total: number; total: number;
+  notes: string | null; created_at: string; items: DocItem[];
+}
+export interface LowStockItem {
+  id: string; name: string; sku: string | null; stock_qty: number; reorder_level: number; unit: string;
+}
+export interface InventorySummary {
+  item_count: number; total_stock_units: number;
+  stock_value_cost: number; stock_value_retail: number;
+  low_stock_count: number; low_stock_items: LowStockItem[];
+  purchases_total: number; sales_total: number;
+  purchases_today: number; sales_today: number;
+}
+export interface PeriodStat {
+  period: string; stock_in: number; stock_out: number; purchases: number; sales: number;
+}
 
 // ── Billing ──────────────────────────────────────────────────
 export interface InvoiceItem {
@@ -166,7 +194,23 @@ export const api = {
   getProduct: (id: string) => request<Product>(`/products/${id}`),
   createProduct: (body: unknown) => request<Product>("/products", { method: "POST", body }),
   updateProduct: (id: string, body: unknown) => request<Product>(`/products/${id}`, { method: "PUT", body }),
+  patchProduct: (id: string, body: Record<string, unknown>) => request<Product>(`/products/${id}`, { method: "PATCH", body }),
   deleteProduct: (id: string) => request<void>(`/products/${id}`, { method: "DELETE" }),
+  bulkDeleteProducts: (ids: string[]) => request<void>("/products/bulk-delete", { method: "POST", body: { ids } }),
+
+  // Inventory activity feed
+  listActivity: (limit = 100) => request<Activity[]>(`/inventory/activity?limit=${limit}`),
+  activityDaily: (days = 90) => request<DailyCount[]>(`/inventory/activity/daily?days=${days}`),
+
+  // Purchase / Sales documents
+  listDocuments: (docType: "purchase" | "sale") => request<InventoryDoc[]>(`/inventory/documents?doc_type=${docType}`),
+  getDocument: (id: string) => request<InventoryDoc>(`/inventory/documents/${id}`),
+  createDocument: (body: unknown) => request<InventoryDoc>("/inventory/documents", { method: "POST", body }),
+  deleteDocument: (id: string) => request<void>(`/inventory/documents/${id}`, { method: "DELETE" }),
+
+  // Inventory reports
+  inventorySummary: () => request<InventorySummary>("/inventory/reports/summary"),
+  inventoryByPeriod: (period: "daily" | "monthly") => request<PeriodStat[]>(`/inventory/reports/by-period?period=${period}`),
 
   // Invoices
   listInvoices: () => request<Invoice[]>("/billing"),

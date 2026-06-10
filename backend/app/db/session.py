@@ -5,7 +5,11 @@ from app.core.config import settings
 
 engine = create_async_engine(
     settings.database_url,
-    pool_pre_ping=True,
+    # No pool_pre_ping: it adds a round trip (SELECT 1) before every request,
+    # which is costly against a remote DB. Recycle connections instead.
+    pool_recycle=1800,
+    pool_size=10,
+    max_overflow=10,
     connect_args={"statement_cache_size": 0},
 )
 SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

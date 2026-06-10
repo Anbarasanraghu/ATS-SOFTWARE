@@ -48,7 +48,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
-        <div className="max-w-4xl mx-auto px-8 py-8">{children}</div>
+        <div className="max-w-[1600px] mx-auto px-8 py-8">{children}</div>
       </main>
     </div>
   );

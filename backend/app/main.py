@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.auth.router import router as auth_router
 from app.modules.products.router import router as products_router
 from app.modules.inventory.router import router as inventory_router
+from app.modules.inventory.docs_router import router as inventory_docs_router
 from app.modules.fields_router import router as fields_router
 from app.modules.billing.router import router as billing_router
 from app.modules.crm.router import router as crm_router
@@ -24,6 +25,7 @@ app.add_middleware(
 app.include_router(auth_router,      prefix="/auth",       tags=["auth"])
 app.include_router(products_router,  prefix="/products",   tags=["products"])
 app.include_router(inventory_router, prefix="/inventory",  tags=["inventory"])
+app.include_router(inventory_docs_router, prefix="/inventory", tags=["inventory"])
 app.include_router(billing_router,   prefix="/billing",    tags=["billing"])
 app.include_router(crm_router,       prefix="/customers",  tags=["crm"])
 app.include_router(reports_router,   prefix="/reports",    tags=["reports"])

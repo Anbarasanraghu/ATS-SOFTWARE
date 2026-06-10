@@ -17,9 +17,14 @@ def verify_password(plain: str, hashed: str) -> bool:
     return bcrypt.checkpw(pwd, hashed.encode("utf-8"))
 
 
-def create_access_token(*, user_id, tenant_id) -> str:
+def create_access_token(*, user_id, tenant_id, email=None, full_name=None,
+                        is_platform_admin=False, role="member") -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
-    payload = {"sub": str(user_id), "tid": str(tenant_id), "exp": expire}
+    # Embed identity so requests don't need a per-request `SELECT users` round trip.
+    payload = {
+        "sub": str(user_id), "tid": str(tenant_id), "exp": expire,
+        "email": email, "name": full_name, "adm": bool(is_platform_admin), "role": role,
+    }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
 
