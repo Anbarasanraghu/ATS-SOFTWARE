@@ -15,7 +15,11 @@ engine = create_async_engine(
 SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 admin_engine = create_async_engine(
-    settings.admin_database_url or settings.database_url, pool_pre_ping=True
+    settings.admin_database_url or settings.database_url,
+    pool_recycle=1800,
+    pool_size=5,
+    max_overflow=5,
+    connect_args={"statement_cache_size": 0},
 )
 AdminSessionLocal = async_sessionmaker(admin_engine, class_=AsyncSession, expire_on_commit=False)
 

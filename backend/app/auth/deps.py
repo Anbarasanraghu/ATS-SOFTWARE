@@ -40,9 +40,18 @@ async def get_request_context(
 from app.db.session import AdminSessionLocal
 
 
-async def get_admin_context(ctx=Depends(get_request_context)):
-    if not ctx["user"].is_platform_admin:
+async def get_admin_context(
+    creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+):
+    """Admin context. Validates the platform-admin claim straight from the JWT
+    (no DB read) and opens only the admin (RLS-bypassing) session — so admin
+    requests don't pay for a second connection + a useless set_config round trip."""
+    payload = decode_token(creds.credentials)
+    if not payload or "sub" not in payload:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
+    user = TokenUser(payload)
+    if not user.is_platform_admin:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Platform admin only")
     async with AdminSessionLocal() as session:
         async with session.begin():
-            yield {"session": session, "user": ctx["user"]}
+            yield {"session": session, "user": user}

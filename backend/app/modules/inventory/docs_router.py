@@ -5,10 +5,11 @@ stock (purchase = in, sale = out) and writes a linked stock_movement.
 Deleting a posted document reverses the stock and removes its movements
 (via the doc_id cascade).
 """
+import json
 from datetime import date, datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import and_, case, func, select
+from sqlalchemy import and_, case, func, select, text
 
 from app.auth.deps import get_request_context
 from app.db.models import InventoryDoc, InventoryDocItem, Product, StockMovement
@@ -173,87 +174,87 @@ async def delete_document(doc_id: str, ctx=Depends(get_request_context)):
 
 # ── Inventory reports ────────────────────────────────────────
 
+# Everything for the inventory dashboard in ONE round trip: product value
+# aggregates, low-stock count + list (JSON), and purchase/sale money totals.
+_INV_SUMMARY_SQL = text("""
+select
+  (select count(*) from products)                                                     as item_count,
+  coalesce((select sum(stock_qty) from products), 0)                                  as total_units,
+  coalesce((select sum(stock_qty * cost_price) from products), 0)                     as value_cost,
+  coalesce((select sum(stock_qty * price) from products), 0)                          as value_retail,
+  (select count(*) from products where reorder_level > 0 and stock_qty <= reorder_level) as low_count,
+  coalesce((select json_agg(x) from (
+      select id, name, sku, stock_qty, reorder_level, unit
+      from products where reorder_level > 0 and stock_qty <= reorder_level
+      order by stock_qty limit 50) x), '[]')                                          as low_items,
+  coalesce(sum(total) filter (where doc_type='purchase'), 0)                          as p_total,
+  coalesce(sum(total) filter (where doc_type='sale'), 0)                              as s_total,
+  coalesce(sum(total) filter (where doc_type='purchase' and doc_date >= current_date), 0) as p_today,
+  coalesce(sum(total) filter (where doc_type='sale'     and doc_date >= current_date), 0) as s_today
+from inventory_docs
+""")
+
+
 @router.get("/reports/summary", response_model=InventorySummary)
 async def reports_summary(ctx=Depends(get_request_context)):
-    session = ctx["session"]
-    products = (await session.execute(select(Product))).scalars().all()
-
-    item_count = len(products)
-    total_units = sum(float(p.stock_qty) for p in products)
-    value_cost = sum(float(p.stock_qty) * float(p.cost_price or 0) for p in products)
-    value_retail = sum(float(p.stock_qty) * float(p.price or 0) for p in products)
-    low = [
-        p for p in products
-        if float(p.reorder_level or 0) > 0 and float(p.stock_qty) <= float(p.reorder_level)
-    ]
+    r = (await ctx["session"].execute(_INV_SUMMARY_SQL)).one()
+    low_raw = r.low_items if not isinstance(r.low_items, str) else json.loads(r.low_items)
     low_items = [
-        LowStockItem(id=str(p.id), name=p.name, sku=p.sku, stock_qty=float(p.stock_qty),
-                     reorder_level=float(p.reorder_level or 0), unit=p.unit)
-        for p in sorted(low, key=lambda x: float(x.stock_qty))[:50]
+        LowStockItem(id=str(x["id"]), name=x["name"], sku=x["sku"],
+                     stock_qty=float(x["stock_qty"]), reorder_level=float(x["reorder_level"]),
+                     unit=x["unit"])
+        for x in (low_raw or [])
     ]
-
-    # All four money totals in a single round trip via conditional aggregation.
-    today = date.today()
-    is_purchase = InventoryDoc.doc_type == "purchase"
-    is_sale = InventoryDoc.doc_type == "sale"
-    is_today = InventoryDoc.doc_date >= today
-    t = (await session.execute(select(
-        func.coalesce(func.sum(case((is_purchase, InventoryDoc.total), else_=0)), 0),
-        func.coalesce(func.sum(case((is_sale, InventoryDoc.total), else_=0)), 0),
-        func.coalesce(func.sum(case((and_(is_purchase, is_today), InventoryDoc.total), else_=0)), 0),
-        func.coalesce(func.sum(case((and_(is_sale, is_today), InventoryDoc.total), else_=0)), 0),
-    ))).one()
-
     return InventorySummary(
-        item_count=item_count, total_stock_units=round(total_units, 3),
-        stock_value_cost=round(value_cost, 2), stock_value_retail=round(value_retail, 2),
-        low_stock_count=len(low), low_stock_items=low_items,
-        purchases_total=float(t[0]), sales_total=float(t[1]),
-        purchases_today=float(t[2]), sales_today=float(t[3]),
+        item_count=r.item_count or 0, total_stock_units=round(float(r.total_units), 3),
+        stock_value_cost=round(float(r.value_cost), 2), stock_value_retail=round(float(r.value_retail), 2),
+        low_stock_count=r.low_count or 0, low_stock_items=low_items,
+        purchases_total=float(r.p_total), sales_total=float(r.s_total),
+        purchases_today=float(r.p_today), sales_today=float(r.s_today),
     )
+
+
+_BY_PERIOD_SQL = text("""
+select period,
+       coalesce(sum(stock_in), 0)  as stock_in,
+       coalesce(sum(stock_out), 0) as stock_out,
+       coalesce(sum(purchases), 0) as purchases,
+       coalesce(sum(sales), 0)     as sales
+from (
+  select to_char(created_at, :fmt) as period,
+         sum(quantity) filter (where movement_type in ('in','return')) as stock_in,
+         sum(quantity) filter (where movement_type = 'out')            as stock_out,
+         0::numeric as purchases, 0::numeric as sales
+  from stock_movements
+  where created_at >= :cutoff
+  group by 1
+  union all
+  select to_char(doc_date, :fmt) as period,
+         0::numeric, 0::numeric,
+         sum(total) filter (where doc_type='purchase') as purchases,
+         sum(total) filter (where doc_type='sale')     as sales
+  from inventory_docs
+  where doc_date >= :cutoff_date
+  group by 1
+) u
+group by period
+order by period
+""")
 
 
 @router.get("/reports/by-period", response_model=list[PeriodStat])
 async def reports_by_period(period: str = "daily", ctx=Depends(get_request_context)):
-    """Stock in/out (units) and purchase/sale value grouped by day or month."""
-    session = ctx["session"]
+    """Stock in/out (units) and purchase/sale value grouped by day or month — one query."""
     if period == "monthly":
         fmt, cutoff = "YYYY-MM", datetime.now(timezone.utc) - timedelta(days=365)
     else:
         fmt, cutoff = "YYYY-MM-DD", datetime.now(timezone.utc) - timedelta(days=30)
 
-    mv_period = func.to_char(StockMovement.created_at, fmt)
-    mv_rows = (await session.execute(
-        select(
-            mv_period.label("period"),
-            func.coalesce(func.sum(case(
-                (StockMovement.movement_type.in_(("in", "return")), StockMovement.quantity), else_=0)), 0).label("stock_in"),
-            func.coalesce(func.sum(case(
-                (StockMovement.movement_type == "out", StockMovement.quantity), else_=0)), 0).label("stock_out"),
-        ).where(StockMovement.created_at >= cutoff).group_by(mv_period)
+    rows = (await ctx["session"].execute(
+        _BY_PERIOD_SQL, {"fmt": fmt, "cutoff": cutoff, "cutoff_date": cutoff.date()}
     )).all()
-
-    doc_period = func.to_char(InventoryDoc.doc_date, fmt)
-    doc_rows = (await session.execute(
-        select(
-            doc_period.label("period"),
-            func.coalesce(func.sum(case(
-                (InventoryDoc.doc_type == "purchase", InventoryDoc.total), else_=0)), 0).label("purchases"),
-            func.coalesce(func.sum(case(
-                (InventoryDoc.doc_type == "sale", InventoryDoc.total), else_=0)), 0).label("sales"),
-        ).where(InventoryDoc.doc_date >= cutoff.date()).group_by(doc_period)
-    )).all()
-
-    merged: dict[str, dict] = {}
-    for r in mv_rows:
-        merged[r.period] = {"stock_in": float(r.stock_in), "stock_out": float(r.stock_out), "purchases": 0.0, "sales": 0.0}
-    for r in doc_rows:
-        m = merged.setdefault(r.period, {"stock_in": 0.0, "stock_out": 0.0, "purchases": 0.0, "sales": 0.0})
-        m["purchases"] = float(r.purchases)
-        m["sales"] = float(r.sales)
-
     return [
-        PeriodStat(period=k, stock_in=v["stock_in"], stock_out=v["stock_out"],
-                   purchases=v["purchases"], sales=v["sales"])
-        for k, v in sorted(merged.items())
+        PeriodStat(period=r.period, stock_in=float(r.stock_in), stock_out=float(r.stock_out),
+                   purchases=float(r.purchases), sales=float(r.sales))
+        for r in rows
     ]

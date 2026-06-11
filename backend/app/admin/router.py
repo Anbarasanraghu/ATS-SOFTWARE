@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import and_, select
 
 from app.auth.deps import get_admin_context
 from app.db.models import FieldDefinition, Module, Tenant, TenantModule
@@ -23,18 +23,19 @@ async def list_tenants(ctx=Depends(get_admin_context)):
 
 @router.get("/tenants/{tenant_id}/modules")
 async def tenant_modules(tenant_id: str, ctx=Depends(get_admin_context)):
-    session = ctx["session"]
-    all_mods = (await session.execute(select(Module).order_by(Module.category, Module.name))).scalars().all()
-    enabled = {
-        str(tm.module_id): tm.enabled
-        for tm in (await session.execute(
-            select(TenantModule).where(TenantModule.tenant_id == tenant_id)
-        )).scalars().all()
-    }
+    # Single round trip: all modules LEFT JOIN this tenant's toggles.
+    rows = (await ctx["session"].execute(
+        select(Module, TenantModule.enabled)
+        .outerjoin(TenantModule, and_(
+            TenantModule.module_id == Module.id,
+            TenantModule.tenant_id == tenant_id,
+        ))
+        .order_by(Module.category, Module.name)
+    )).all()
     return [
         {"module_id": str(m.id), "code": m.code, "name": m.name,
-         "category": m.category, "enabled": enabled.get(str(m.id), False)}
-        for m in all_mods
+         "category": m.category, "enabled": bool(enabled)}
+        for m, enabled in rows
     ]
 
 
