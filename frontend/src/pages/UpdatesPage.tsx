@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Package, PlusCircle, Trash2, ArrowDownUp, Pencil } from "lucide-react";
 import { api, type Activity, type DailyCount } from "../lib/api";
+import { money } from "../lib/money";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const dayKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -15,13 +16,14 @@ function actionIcon(a: Activity) {
 }
 
 // Source categories the feed can be filtered by.
-const CATEGORIES = ["Inventory", "Stock In/Out", "Purchases", "Sales / POS"] as const;
+const CATEGORIES = ["Inventory", "Stock In/Out", "Purchases", "Sales / POS", "Payroll"] as const;
 type Category = (typeof CATEGORIES)[number];
 
 function categoryOf(a: Activity): Category {
   if (a.entity === "stock") return "Stock In/Out";
   if (a.entity === "purchase") return "Purchases";
   if (a.entity === "sale") return "Sales / POS";
+  if (a.entity === "payroll") return "Payroll";
   return "Inventory"; // product / category / supplier
 }
 
@@ -30,6 +32,7 @@ const CATEGORY_STYLE: Record<Category, string> = {
   "Stock In/Out": "bg-accent-soft text-accent",
   "Purchases": "bg-violet-100 text-violet-700",
   "Sales / POS": "bg-emerald-100 text-emerald-700",
+  "Payroll": "bg-amber-100 text-amber-700",
 };
 
 function describe(a: Activity): string {
@@ -40,13 +43,21 @@ function describe(a: Activity): string {
     const label = { in: "Stock in", out: "Stock out", adjustment: "Adjusted", return: "Returned" }[a.action] ?? a.action;
     return `${label} ${qty ?? ""} · ${name}${stock != null ? ` → ${stock} on hand` : ""}`;
   }
+  if (a.entity === "payroll") {
+    const period = a.detail.period as string | undefined;
+    const net = a.detail.net as number | undefined;
+    if (a.action === "run") return `Ran payroll for ${name} · ${a.detail.created ?? 0} created`;
+    const verb = { create: "Payroll created", update: "Payroll edited", approved: "Payroll approved",
+                   paid: "Salary paid", delete: "Payroll deleted" }[a.action] ?? `Payroll ${a.action}`;
+    return `${verb} — ${name}${period ? ` (${period})` : ""}${net != null ? ` · ${money(net)}` : ""}`;
+  }
   if (a.entity === "purchase" || a.entity === "sale") {
     const isPos = a.entity === "sale" && name.startsWith("INV-");
     const verb = a.action === "delete"
       ? "Reversed"
       : a.entity === "purchase" ? "Purchase from" : isPos ? "POS / invoice sale" : "Sale to";
     const total = a.detail.total as number | undefined;
-    return `${verb} ${name}${total != null ? ` · ${total.toFixed(2)}` : ""}`;
+    return `${verb} ${name}${total != null ? ` · ${money(total)}` : ""}`;
   }
   if (a.action === "create") return `Added ${name}`;
   if (a.action === "delete") return `Deleted ${name}`;

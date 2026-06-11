@@ -463,6 +463,36 @@ do $$ begin
   end if;
 end $$;
 
+-- ── 011: payroll extended (statutory, itemised, employer share) ──
+alter table employees add column if not exists pan            text;
+alter table employees add column if not exists aadhaar        text;
+alter table employees add column if not exists uan            text;
+alter table employees add column if not exists pf_number      text;
+alter table employees add column if not exists esi_number     text;
+alter table employees add column if not exists bank_account   text;
+alter table employees add column if not exists bank_ifsc      text;
+alter table employees add column if not exists bank_name      text;
+alter table employees add column if not exists salary_structure jsonb not null default '{}'::jsonb;
+
+alter table payroll_records add column if not exists earnings          jsonb   not null default '{}'::jsonb;
+alter table payroll_records add column if not exists deductions_detail jsonb   not null default '{}'::jsonb;
+alter table payroll_records add column if not exists gross_earnings    numeric(14,2) not null default 0;
+alter table payroll_records add column if not exists total_deductions  numeric(14,2) not null default 0;
+alter table payroll_records add column if not exists employer_pf       numeric(14,2) not null default 0;
+alter table payroll_records add column if not exists employer_esi      numeric(14,2) not null default 0;
+alter table payroll_records add column if not exists working_days      numeric(5,1);
+alter table payroll_records add column if not exists paid_days         numeric(5,1);
+alter table payroll_records add column if not exists lop_days          numeric(5,1) not null default 0;
+alter table payroll_records add column if not exists approved_by       uuid references users(id);
+alter table payroll_records add column if not exists paid_on           date;
+alter table payroll_records add column if not exists payment_method    text;
+alter table payroll_records add column if not exists payment_reference text;
+
+-- ── 012: barcode column + per-tenant unique index ───────────
+alter table products add column if not exists barcode text;
+create unique index if not exists products_tenant_barcode_uidx
+  on products (tenant_id, barcode) where barcode is not null;
+
 -- Enable all core modules for any existing tenants that don't have them yet
 insert into tenant_modules (tenant_id, module_id, enabled)
 select t.id, m.id, true

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import { api, type InventorySummary, type PeriodStat } from "../lib/api";
+import { money } from "../lib/money";
 
 function Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
@@ -21,7 +22,6 @@ export default function InventoryReportsPage() {
   useEffect(() => { void api.inventoryByPeriod(period).then(setStats); }, [period]);
 
   const maxVal = Math.max(1, ...stats.map((s) => Math.max(s.stock_in, s.stock_out)));
-  const money = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="space-y-6">

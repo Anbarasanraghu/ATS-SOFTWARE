@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, Plus, Trash2 } from "lucide-react";
 import { api, type Customer, type Invoice, type Product } from "../lib/api";
+import { money } from "../lib/money";
 
 const STATUS_CLS: Record<string, string> = {
   draft: "bg-zinc-100 text-zinc-600",
@@ -182,7 +183,7 @@ export default function BillingPage() {
                           value={l.tax_percent} onChange={(e) => updateLine(i, "tax_percent", e.target.value)} />
                       </td>
                       <td className="px-3 py-2 text-right font-mono">
-                        {(Number(l.quantity) * Number(l.unit_price)).toFixed(2)}
+                        {money(Number(l.quantity) * Number(l.unit_price))}
                       </td>
                       <td className="px-3 py-2 text-center">
                         {lines.length > 1 && (
@@ -206,10 +207,10 @@ export default function BillingPage() {
           {/* Totals */}
           <div className="flex justify-end">
             <div className="w-52 space-y-1 text-sm">
-              <div className="flex justify-between text-muted"><span>Subtotal</span><span>{subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-muted"><span>Tax</span><span>{taxTotal.toFixed(2)}</span></div>
+              <div className="flex justify-between text-muted"><span>Subtotal</span><span>{money(subtotal)}</span></div>
+              <div className="flex justify-between text-muted"><span>Tax</span><span>{money(taxTotal)}</span></div>
               <div className="flex justify-between font-semibold border-t border-line pt-1">
-                <span>Total</span><span>{(subtotal + taxTotal).toFixed(2)}</span>
+                <span>Total</span><span>{money(subtotal + taxTotal)}</span>
               </div>
             </div>
           </div>
@@ -256,11 +257,11 @@ export default function BillingPage() {
                   <td className="px-4 py-3 font-medium">{inv.customer_name}</td>
                   <td className="px-4 py-3 text-muted">{inv.issue_date}</td>
                   <td className="px-4 py-3 text-muted">{inv.due_date ?? "—"}</td>
-                  <td className="px-4 py-3 text-right font-mono">{Number(inv.total).toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right font-mono text-emerald-700">{Number(inv.amount_paid).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{money(inv.total)}</td>
+                  <td className="px-4 py-3 text-right font-mono text-emerald-700">{money(inv.amount_paid)}</td>
                   <td className="px-4 py-3 text-right font-mono">
                     <span className={inv.balance_due > 0 ? "text-danger font-semibold" : "text-muted"}>
-                      {Number(inv.balance_due).toFixed(2)}
+                      {money(inv.balance_due)}
                     </span>
                   </td>
                   <td className="px-4 py-3">

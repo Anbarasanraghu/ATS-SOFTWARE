@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Trash2, Plus, Minus, ShoppingCart, Barcode, CheckCircle, RotateCcw } from "lucide-react";
 import { api, type Customer, type Product } from "../lib/api";
+import { money } from "../lib/money";
 
 type CartItem = {
   product: Product;
@@ -147,7 +148,7 @@ export default function POSPage() {
           <div className="text-2xl font-bold text-emerald-700">Payment Received</div>
           <div className="text-muted mt-1">{lastInvoice.number}</div>
           <div className="text-4xl font-bold mt-3 font-mono">
-            ${Number(lastInvoice.total).toFixed(2)}
+            {money(lastInvoice.total)}
           </div>
         </div>
         <button onClick={newSale}
@@ -237,7 +238,7 @@ export default function POSPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm truncate">{item.product.name}</div>
                   <div className="text-xs text-muted">
-                    {item.product.sku ?? item.product.barcode ?? "—"} · ${item.product.price.toFixed(2)} each
+                    {item.product.sku ?? item.product.barcode ?? "—"} · {money(item.product.price)} each
                     {item.product.tax_percent > 0 && ` + ${item.product.tax_percent}% tax`}
                   </div>
                 </div>
@@ -261,7 +262,7 @@ export default function POSPage() {
                 </div>
                 {/* Line total */}
                 <div className="w-20 text-right font-mono text-sm font-semibold">
-                  ${(item.product.price * item.qty).toFixed(2)}
+                  {money(item.product.price * item.qty)}
                 </div>
                 <button onClick={() => removeItem(item.product.id)}
                   className="text-muted hover:text-danger ml-1">
@@ -306,17 +307,17 @@ export default function POSPage() {
             <div className="space-y-0.5 text-sm">
               <div className="flex gap-8 text-muted">
                 <span>Subtotal</span>
-                <span className="font-mono">${subtotal.toFixed(2)}</span>
+                <span className="font-mono">{money(subtotal)}</span>
               </div>
               {taxTotal > 0 && (
                 <div className="flex gap-8 text-muted">
                   <span>Tax</span>
-                  <span className="font-mono">${taxTotal.toFixed(2)}</span>
+                  <span className="font-mono">{money(taxTotal)}</span>
                 </div>
               )}
               <div className="flex gap-8 font-bold text-lg pt-1 border-t border-line">
                 <span>Total</span>
-                <span className="font-mono">${total.toFixed(2)}</span>
+                <span className="font-mono">{money(total)}</span>
               </div>
             </div>
 
@@ -325,7 +326,7 @@ export default function POSPage() {
               disabled={cart.length === 0 || checkoutState === "loading"}
               onClick={checkout}
               className="rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white px-8 py-4 text-lg font-bold transition-colors">
-              {checkoutState === "loading" ? "Processing…" : `Charge $${total.toFixed(2)}`}
+              {checkoutState === "loading" ? "Processing…" : `Charge ${money(total)}`}
             </button>
           </div>
         </div>
@@ -363,7 +364,7 @@ function QuickList({ onAdd }: { onAdd: (p: Product) => void }) {
             <div className="font-medium truncate">{p.name}</div>
             <div className="text-muted flex items-center justify-between mt-0.5">
               <span>{p.barcode ?? p.sku ?? "—"}</span>
-              <span className="font-mono font-semibold text-ink">${p.price.toFixed(2)}</span>
+              <span className="font-mono font-semibold text-ink">{money(p.price)}</span>
             </div>
           </button>
         ))}

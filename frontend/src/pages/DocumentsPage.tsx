@@ -3,6 +3,7 @@ import { Plus, Trash2, X } from "lucide-react";
 import {
   api, type Customer, type DocItem, type InventoryDoc, type Product, type Supplier,
 } from "../lib/api";
+import { money } from "../lib/money";
 
 const inputCls = "w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
 const blankLine = (): DocItem => ({ product_id: null, description: "", quantity: 1, unit_price: 0, tax_percent: 0 });
@@ -52,6 +53,23 @@ export default function DocumentsPage({ docType }: { docType: "purchase" | "sale
       unit_price: isPurchase ? p.cost_price : p.price,
       tax_percent: p.tax_percent,
     });
+  }
+
+  const [scan, setScan] = useState("");
+  async function addByScan(code: string) {
+    const c = code.trim(); if (!c) return;
+    setError(null);
+    try {
+      const p = await api.scanProduct(c);
+      setLines((ls) => {
+        const line = { product_id: p.id, description: p.name, quantity: 1,
+                       unit_price: isPurchase ? p.cost_price : p.price, tax_percent: p.tax_percent };
+        // fill the first empty line, else append
+        const idx = ls.findIndex((l) => !l.description && !l.product_id);
+        return idx >= 0 ? ls.map((l, i) => (i === idx ? line : l)) : [...ls, line];
+      });
+      setScan("");
+    } catch { setError(`No product found for "${c}"`); }
   }
 
   const totals = useMemo(() => {
@@ -122,7 +140,7 @@ export default function DocumentsPage({ docType }: { docType: "purchase" | "sale
                   <td className="px-4 py-3">{d.doc_date}</td>
                   <td className="px-4 py-3 font-mono text-xs">{d.doc_number ?? "—"}</td>
                   <td className="px-4 py-3">{d.party_name ?? "—"}</td>
-                  <td className="px-4 py-3 text-right font-mono">{d.total.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{money(d.total)}</td>
                   <td className="px-4 py-3 text-right">
                     <button onClick={() => remove(d.id)} className="text-muted hover:text-danger" title="Delete"><Trash2 size={14} /></button>
                   </td>
@@ -153,6 +171,12 @@ export default function DocumentsPage({ docType }: { docType: "purchase" | "sale
                 <input type="date" className={`${inputCls} mt-1`} value={head.doc_date} onChange={(e) => setHead({ ...head, doc_date: e.target.value })} /></label>
             </div>
 
+            <div className="flex items-center gap-2">
+              <input className={`${inputCls} flex-1`} placeholder="📷 Scan barcode / SKU to add a line…"
+                value={scan} onChange={(e) => setScan(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void addByScan(scan); } }} />
+              <button type="button" onClick={() => void addByScan(scan)} className="rounded-md border border-line px-3 py-2 text-sm hover:bg-line/50">Add</button>
+            </div>
             <div className="border border-line rounded-md overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
@@ -181,7 +205,7 @@ export default function DocumentsPage({ docType }: { docType: "purchase" | "sale
                         <td className="px-2 py-1"><input type="number" step="0.001" className={`${inputCls} text-right`} value={l.quantity} onChange={(e) => setLine(i, { quantity: Number(e.target.value) })} /></td>
                         <td className="px-2 py-1"><input type="number" step="0.01" className={`${inputCls} text-right`} value={l.unit_price} onChange={(e) => setLine(i, { unit_price: Number(e.target.value) })} /></td>
                         <td className="px-2 py-1"><input type="number" step="0.01" className={`${inputCls} text-right`} value={l.tax_percent} onChange={(e) => setLine(i, { tax_percent: Number(e.target.value) })} /></td>
-                        <td className="px-2 py-1 text-right font-mono">{lineTotal.toFixed(2)}</td>
+                        <td className="px-2 py-1 text-right font-mono">{money(lineTotal)}</td>
                         <td className="px-2 py-1 text-center">
                           <button type="button" onClick={() => setLines((ls) => ls.length > 1 ? ls.filter((_, idx) => idx !== i) : ls)} className="text-muted hover:text-danger"><Trash2 size={13} /></button>
                         </td>
@@ -197,9 +221,9 @@ export default function DocumentsPage({ docType }: { docType: "purchase" | "sale
               <label className="block flex-1"><span className="text-xs font-medium uppercase tracking-wide text-muted">Notes</span>
                 <input className={`${inputCls} mt-1`} value={head.notes} onChange={(e) => setHead({ ...head, notes: e.target.value })} /></label>
               <div className="text-sm text-right space-y-1 min-w-[180px]">
-                <div className="flex justify-between gap-6"><span className="text-muted">Subtotal</span><span className="font-mono">{totals.subtotal.toFixed(2)}</span></div>
-                <div className="flex justify-between gap-6"><span className="text-muted">Tax</span><span className="font-mono">{totals.tax.toFixed(2)}</span></div>
-                <div className="flex justify-between gap-6 font-semibold border-t border-line pt-1"><span>Total</span><span className="font-mono">{totals.total.toFixed(2)}</span></div>
+                <div className="flex justify-between gap-6"><span className="text-muted">Subtotal</span><span className="font-mono">{money(totals.subtotal)}</span></div>
+                <div className="flex justify-between gap-6"><span className="text-muted">Tax</span><span className="font-mono">{money(totals.tax)}</span></div>
+                <div className="flex justify-between gap-6 font-semibold border-t border-line pt-1"><span>Total</span><span className="font-mono">{money(totals.total)}</span></div>
               </div>
             </div>
 

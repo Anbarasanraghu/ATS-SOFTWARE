@@ -42,11 +42,14 @@ def _to_out(p: Product) -> ProductOut:
 async def scan_product(code: str, ctx=Depends(get_request_context)):
     """Look up a product by barcode or SKU. Used by the POS scanner."""
     session = ctx["session"]
+    # Prefer an exact barcode match, then SKU; limit(1) keeps it safe even if
+    # legacy data has a duplicate code.
     p = (await session.execute(
-        select(Product).where(
-            or_(Product.barcode == code, Product.sku == code)
-        )
-    )).scalar_one_or_none()
+        select(Product)
+        .where(or_(Product.barcode == code, Product.sku == code))
+        .order_by((Product.barcode == code).desc())
+        .limit(1)
+    )).scalars().first()
     if not p:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"No product found for code '{code}'")
     return _to_out(p)

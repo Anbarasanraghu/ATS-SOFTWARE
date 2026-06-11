@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2, MessageSquare, Phone, Mail, FileText } from "lucide-react";
 import { api, type Customer, type CustomerInvoice, type Interaction } from "../lib/api";
+import { money } from "../lib/money";
 
 const STATUS_CLS: Record<string, string> = {
   draft: "bg-zinc-100 text-zinc-600", sent: "bg-sky-100 text-sky-700",
@@ -86,7 +87,7 @@ export default function CustomerDetailPage() {
             <div className="text-xs text-muted uppercase tracking-wide mt-1">Total Invoices</div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-emerald-700">${totalRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-emerald-700">{money(totalRevenue)}</div>
             <div className="text-xs text-muted uppercase tracking-wide mt-1">Revenue (Paid)</div>
           </div>
           <div className="text-center">
@@ -121,7 +122,7 @@ export default function CustomerDetailPage() {
                       <div>{inv.invoice_number}</div>
                       <div className="text-muted">{inv.issue_date ?? "—"}</div>
                     </td>
-                    <td className="px-4 py-2 text-right font-mono">{Number(inv.total).toFixed(2)}</td>
+                    <td className="px-4 py-2 text-right font-mono">{money(inv.total)}</td>
                     <td className="px-4 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLS[inv.status] ?? ""}`}>{inv.status}</span>
                     </td>

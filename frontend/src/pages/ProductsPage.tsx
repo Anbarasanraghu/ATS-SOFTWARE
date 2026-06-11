@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, Pencil, Plus, Trash2, X, ArrowDownUp } from "lucide-react";
 import { api, type Category, type FieldDef, type Product, type Supplier } from "../lib/api";
 import DynamicFields from "../components/DynamicFields";
+import { money } from "../lib/money";
 
 type EditForm = {
   sku: string; barcode: string; name: string; price: string; cost_price: string;
@@ -303,8 +304,8 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-muted">{p.barcode ?? "—"}</td>
                       <td className="px-4 py-3 text-muted text-xs">{cat?.name ?? "—"}</td>
-                      <td className="px-4 py-3 text-right font-mono">{Number(p.price).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-right font-mono text-muted">{Number(p.cost_price).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-mono">{money(p.price)}</td>
+                      <td className="px-4 py-3 text-right font-mono text-muted">{money(p.cost_price)}</td>
                       <td className="px-4 py-3 text-right">
                         <span className={p.is_low_stock ? "text-amber-600 font-semibold" : ""}>
                           {p.stock_qty} {p.unit}

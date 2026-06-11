@@ -136,6 +136,10 @@ export interface Employee {
   hire_date: string | null; status: string;
   salary: number | null; annual_leave_balance: number;
   notes: string | null; custom_fields: Record<string, unknown>; created_at: string;
+  pan?: string | null; aadhaar?: string | null; uan?: string | null;
+  pf_number?: string | null; esi_number?: string | null;
+  bank_account?: string | null; bank_ifsc?: string | null; bank_name?: string | null;
+  salary_structure?: Record<string, number>;
 }
 export interface LeaveRequest {
   id: string; employee_id: string; employee_name: string;
@@ -147,7 +151,24 @@ export interface PayrollRecord {
   id: string; employee_id: string; employee_name: string;
   period_month: number; period_year: number;
   basic_salary: number; allowances: number; deductions: number; net_salary: number;
+  earnings: Record<string, number>; deductions_detail: Record<string, number>;
+  gross_earnings: number; total_deductions: number;
+  employer_pf: number; employer_esi: number;
+  working_days: number | null; paid_days: number | null; lop_days: number;
+  paid_on: string | null; payment_method: string | null; payment_reference: string | null;
   status: string; notes: string | null; created_at: string;
+}
+export interface PayrollSummary {
+  period_month: number; period_year: number; count: number;
+  gross: number; deductions: number; net: number;
+  employer_pf: number; employer_esi: number;
+  pf_total: number; esi_total: number; pt_total: number; tds_total: number; ctc: number;
+}
+export interface Payslip {
+  company: { name: string };
+  record: PayrollRecord;
+  employee: Record<string, string | null>;
+  ytd: { gross: number; deductions: number; net: number; financial_year: string };
 }
 
 // ── Reports ──────────────────────────────────────────────────
@@ -262,10 +283,23 @@ export const api = {
   deleteLeaveRequest: (id: string) => request<void>(`/employees/leave-requests/${id}`, { method: "DELETE" }),
 
   // Payroll
-  listPayroll: () => request<PayrollRecord[]>("/employees/payroll"),
+  listPayroll: (q: { month?: number; year?: number; status_f?: string } = {}) => {
+    const p = new URLSearchParams();
+    if (q.month) p.set("month", String(q.month));
+    if (q.year) p.set("year", String(q.year));
+    if (q.status_f) p.set("status_f", q.status_f);
+    const qs = p.toString();
+    return request<PayrollRecord[]>(`/employees/payroll${qs ? `?${qs}` : ""}`);
+  },
   createPayroll: (body: unknown) => request<PayrollRecord>("/employees/payroll", { method: "POST", body }),
-  updatePayrollStatus: (id: string, status: string) =>
-    request<PayrollRecord>(`/employees/payroll/${id}/status`, { method: "PATCH", body: { status } }),
+  updatePayroll: (id: string, body: unknown) => request<PayrollRecord>(`/employees/payroll/${id}`, { method: "PUT", body }),
+  runPayroll: (body: unknown) =>
+    request<{ created: number; skipped: number; records: PayrollRecord[] }>("/employees/payroll/run", { method: "POST", body }),
+  payrollSummary: (month: number, year: number) =>
+    request<PayrollSummary>(`/employees/payroll/summary?month=${month}&year=${year}`),
+  payslip: (id: string) => request<Payslip>(`/employees/payroll/${id}/payslip`),
+  updatePayrollStatus: (id: string, body: { status: string; payment_method?: string; payment_reference?: string; paid_on?: string }) =>
+    request<PayrollRecord>(`/employees/payroll/${id}/status`, { method: "PATCH", body }),
   deletePayroll: (id: string) => request<void>(`/employees/payroll/${id}`, { method: "DELETE" }),
 
   // Admin

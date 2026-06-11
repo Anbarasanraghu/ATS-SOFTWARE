@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, ArrowDownUp, Download, Plus, Trash2, X } from "lucide-react";
 import { api, type Category, type FieldDef, type Product, type Supplier } from "../lib/api";
+import { money } from "../lib/money";
+import ScanInput from "../components/ScanInput";
 
 const inputCls = "w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
 const NUMERIC = ["price", "cost_price", "stock_qty", "reorder_level", "tax_percent"];
@@ -111,6 +113,9 @@ export default function InventoryPage() {
   });
   const [nr, setNr] = useState<NewRow>(blankNew());
   const [adding, setAdding] = useState(false);
+  const [scanMsg, setScanMsg] = useState<string | null>(null);
+  const newRowRef = useRef<HTMLTableRowElement>(null);
+  const newNameRef = useRef<HTMLInputElement>(null);
 
   // stock movement modal
   const [movingProduct, setMovingProduct] = useState<Product | null>(null);
@@ -169,7 +174,7 @@ export default function InventoryPage() {
         category_id: nr.category_id || null, supplier_id: nr.supplier_id || null,
         custom_fields: nr.custom,
       });
-      setNr(blankNew());
+      setNr(blankNew()); setScanMsg(null);
       await refresh();
     } catch (err) { setError(err instanceof Error ? err.message : "Failed to add"); }
     finally { setAdding(false); }
@@ -255,8 +260,21 @@ export default function InventoryPage() {
   }
 
   const catOpts = categories.map((c) => ({ id: c.id, label: c.name }));
+  // Supermarket-style scan: known barcode → stock-in; new barcode → add to inventory.
+  async function handleScan(code: string) {
+    setError(null); setScanMsg(null); setTab("items");
+    try {
+      const p = await api.scanProduct(code);
+      setMovingProduct(p);
+      setMoveForm({ movement_type: "in", quantity: "1", unit_cost: "", reference: "", notes: "Scanned in" });
+    } catch {
+      setNr({ ...blankNew(), barcode: code });
+      setScanMsg(`New barcode “${code}” — fill the highlighted row below and click Add to put it in inventory.`);
+      setTimeout(() => { newRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); newNameRef.current?.focus(); }, 60);
+    }
+  }
+
   const supOpts = suppliers.map((s) => ({ id: s.id, label: s.name }));
-  const num = (v: string | number | null) => Number(v ?? 0).toFixed(2);
 
   return (
     <div className="space-y-6">
@@ -270,6 +288,7 @@ export default function InventoryPage() {
         </div>
         {tab === "items" && (
           <div className="ml-auto flex items-center gap-2">
+            <ScanInput onScan={handleScan} className="w-56" placeholder="Scan barcode → stock-in / add…" />
             <input className="rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent w-48"
               placeholder="Search name / SKU / barcode…" value={search} onChange={(e) => setSearch(e.target.value)} />
             {selected.size > 0 && (
@@ -287,6 +306,12 @@ export default function InventoryPage() {
       </div>
 
       {error && <p className="text-sm text-danger">{error}</p>}
+      {scanMsg && (
+        <div className="flex items-center justify-between rounded-md border border-accent/30 bg-accent-soft/40 text-accent text-sm px-4 py-2">
+          <span>{scanMsg}</span>
+          <button onClick={() => setScanMsg(null)} className="text-muted hover:text-ink"><X size={15} /></button>
+        </div>
+      )}
 
       {tab === "items" && (
         <div className="bg-surface border border-line rounded-lg overflow-x-auto">
@@ -327,8 +352,8 @@ export default function InventoryPage() {
                   <td className="px-1 py-1 min-w-[120px]"><SelectCell value={p.category_id ?? ""} options={catOpts} onSave={(v) => patchField(p.id, "category_id", v)} /></td>
                   <td className="px-1 py-1 min-w-[120px]"><SelectCell value={p.supplier_id ?? ""} options={supOpts} onSave={(v) => patchField(p.id, "supplier_id", v)} /></td>
                   <td className="px-1 py-1 w-16"><EditableCell value={p.unit} onSave={(v) => patchField(p.id, "unit", v)} /></td>
-                  <td className="px-1 py-1 text-right font-mono"><EditableCell value={p.price} type="number" align="right" render={num} onSave={(v) => patchField(p.id, "price", v)} /></td>
-                  <td className="px-1 py-1 text-right font-mono text-muted"><EditableCell value={p.cost_price} type="number" align="right" render={num} onSave={(v) => patchField(p.id, "cost_price", v)} /></td>
+                  <td className="px-1 py-1 text-right font-mono"><EditableCell value={p.price} type="number" align="right" render={money} onSave={(v) => patchField(p.id, "price", v)} /></td>
+                  <td className="px-1 py-1 text-right font-mono text-muted"><EditableCell value={p.cost_price} type="number" align="right" render={money} onSave={(v) => patchField(p.id, "cost_price", v)} /></td>
                   <td className="px-1 py-1 text-right font-mono">
                     <EditableCell value={p.stock_qty} type="number" align="right"
                       render={(v) => <span className={p.is_low_stock ? "text-amber-600 font-semibold" : ""}>{v}</span>}
@@ -355,9 +380,9 @@ export default function InventoryPage() {
                 </tr>
               ))}
               {/* add-row — mirrors every column, incl. custom fields */}
-              <tr className="bg-paper/50 align-top">
+              <tr ref={newRowRef} className={`align-top ${scanMsg ? "bg-accent-soft/50 ring-1 ring-accent" : "bg-paper/50"}`}>
                 <td className="px-3 py-2"><Plus size={14} className="text-accent" /></td>
-                <td className="px-1 py-2"><input className={inputCls} placeholder="New item name…" value={nr.name}
+                <td className="px-1 py-2"><input ref={newNameRef} className={inputCls} placeholder="New item name…" value={nr.name}
                   onChange={(e) => setNr({ ...nr, name: e.target.value })}
                   onKeyDown={(e) => { if (e.key === "Enter") addRow(e); }} /></td>
                 <td className="px-1 py-2"><input className={inputCls} placeholder="SKU" value={nr.sku} onChange={(e) => setNr({ ...nr, sku: e.target.value })} /></td>
