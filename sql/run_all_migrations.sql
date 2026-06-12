@@ -493,6 +493,50 @@ alter table products add column if not exists barcode text;
 create unique index if not exists products_tenant_barcode_uidx
   on products (tenant_id, barcode) where barcode is not null;
 
+-- ── 013: multiple barcodes per product ──────────────────────
+alter table products add column if not exists barcode_type text;
+create table if not exists product_barcodes (
+  id           uuid primary key default gen_random_uuid(),
+  tenant_id    uuid not null references tenants(id) on delete cascade,
+  product_id   uuid not null references products(id) on delete cascade,
+  barcode      text not null,
+  barcode_type text not null default 'CODE128',
+  kind         text not null default 'alternate',
+  created_at   timestamptz not null default now()
+);
+create unique index if not exists product_barcodes_tenant_barcode_uidx on product_barcodes(tenant_id, barcode);
+create index if not exists product_barcodes_product_idx on product_barcodes(product_id);
+alter table product_barcodes enable row level security;
+alter table product_barcodes force  row level security;
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename='product_barcodes' and policyname='tenant_isolation') then
+    create policy tenant_isolation on product_barcodes using (tenant_id = current_tenant_id()) with check (tenant_id = current_tenant_id());
+  end if;
+end $$;
+
+-- ── 014: pharmacy batch & expiry ────────────────────────────
+create table if not exists product_batches (
+  id          uuid primary key default gen_random_uuid(),
+  tenant_id   uuid not null references tenants(id) on delete cascade,
+  product_id  uuid not null references products(id) on delete cascade,
+  batch_no    text,
+  mfg_date    date,
+  expiry_date date,
+  quantity    numeric(14,3) not null default 0,
+  created_by  uuid references users(id),
+  created_at  timestamptz not null default now()
+);
+create index if not exists product_batches_tenant_idx  on product_batches(tenant_id);
+create index if not exists product_batches_product_idx on product_batches(product_id);
+create index if not exists product_batches_expiry_idx  on product_batches(tenant_id, expiry_date);
+alter table product_batches enable row level security;
+alter table product_batches force  row level security;
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename='product_batches' and policyname='tenant_isolation') then
+    create policy tenant_isolation on product_batches using (tenant_id = current_tenant_id()) with check (tenant_id = current_tenant_id());
+  end if;
+end $$;
+
 -- Enable all core modules for any existing tenants that don't have them yet
 insert into tenant_modules (tenant_id, module_id, enabled)
 select t.id, m.id, true

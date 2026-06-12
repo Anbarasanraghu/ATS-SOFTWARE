@@ -5,6 +5,8 @@ import LoginPage from "./pages/LoginPage";
 import POSPage from "./pages/POSPage";
 import ProductsPage from "./pages/ProductsPage";
 import InventoryPage from "./pages/InventoryPage";
+import ScanStockPage from "./pages/ScanStockPage";
+import PharmacyPage from "./pages/PharmacyPage";
 import UpdatesPage from "./pages/UpdatesPage";
 import DocumentsPage from "./pages/DocumentsPage";
 import InventoryReportsPage from "./pages/InventoryReportsPage";
@@ -34,6 +36,9 @@ export default function App() {
       <Routes>
         <Route path="/pos"            element={<POSPage />} />
         <Route path="/inventory"      element={<InventoryPage />} />
+        <Route path="/scan-stock"     element={<ScanStockPage />} />
+        <Route path="/pharmacy"          element={<PharmacyPage mode="batches" />} />
+        <Route path="/pharmacy/expiry"   element={<PharmacyPage mode="expiry" />} />
         <Route path="/purchases"      element={<DocumentsPage docType="purchase" />} />
         <Route path="/sales"          element={<DocumentsPage docType="sale" />} />
         <Route path="/inventory-reports" element={<InventoryReportsPage />} />

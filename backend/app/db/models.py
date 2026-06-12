@@ -92,6 +92,7 @@ class Product(Base):
     supplier_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("suppliers.id", ondelete="SET NULL"))
     sku: Mapped[str | None] = mapped_column(String)
     barcode: Mapped[str | None] = mapped_column(String)
+    barcode_type: Mapped[str | None] = mapped_column(String)
     name: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text)
     unit: Mapped[str] = mapped_column(String, default="pcs")
@@ -102,6 +103,30 @@ class Product(Base):
     reorder_level: Mapped[float] = mapped_column(Numeric(14, 3), default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     custom_fields: Mapped[dict] = mapped_column(JSONB, default=dict)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ProductBarcode(Base):
+    __tablename__ = "product_barcodes"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    product_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"))
+    barcode: Mapped[str] = mapped_column(String)
+    barcode_type: Mapped[str] = mapped_column(String, default="CODE128")
+    kind: Mapped[str] = mapped_column(String, default="alternate")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ProductBatch(Base):
+    __tablename__ = "product_batches"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    product_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"))
+    batch_no: Mapped[str | None] = mapped_column(String)
+    mfg_date: Mapped[date | None] = mapped_column(Date)
+    expiry_date: Mapped[date | None] = mapped_column(Date)
+    quantity: Mapped[float] = mapped_column(Numeric(14, 3), default=0)
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

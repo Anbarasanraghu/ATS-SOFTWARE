@@ -1,4 +1,7 @@
-const BASE = "http://localhost:8001";
+// Same-origin by default: Vite proxies /api/* to the backend (see vite.config.ts).
+// This avoids port mismatches and works over HTTPS / on a phone. For a real
+// deployment set VITE_API_URL to the backend URL at build time.
+const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api";
 
 let token: string | null = localStorage.getItem("erp_token");
 
@@ -53,11 +56,20 @@ export interface Supplier {
   status: string; created_at: string;
 }
 export interface Product {
-  id: string; sku: string | null; barcode: string | null; name: string; unit: string;
+  id: string; sku: string | null; barcode: string | null; barcode_type?: string | null; name: string; unit: string;
   price: number; cost_price: number; tax_percent: number;
   stock_qty: number; reorder_level: number; is_low_stock: boolean;
   category_id: string | null; supplier_id: string | null;
   custom_fields: Record<string, unknown>;
+  expiry_status?: "none" | "ok" | "near" | "expired" | null;
+  nearest_expiry?: string | null;
+  sellable_qty?: number | null;
+}
+export interface ProductBarcode { id: string; barcode: string; barcode_type: string; kind: string; }
+export interface ProductBatch {
+  id: string; product_id: string; product_name: string;
+  batch_no: string | null; mfg_date: string | null; expiry_date: string | null;
+  quantity: number; status: "ok" | "near" | "expired"; days_to_expiry: number | null; created_at: string;
 }
 export interface StockMovement {
   id: string; product_id: string; product_name: string;
@@ -218,6 +230,18 @@ export const api = {
   patchProduct: (id: string, body: Record<string, unknown>) => request<Product>(`/products/${id}`, { method: "PATCH", body }),
   deleteProduct: (id: string) => request<void>(`/products/${id}`, { method: "DELETE" }),
   bulkDeleteProducts: (ids: string[]) => request<void>("/products/bulk-delete", { method: "POST", body: { ids } }),
+
+  // Multiple barcodes per product
+  listProductBarcodes: (productId: string) => request<ProductBarcode[]>(`/products/${productId}/barcodes`),
+  addProductBarcode: (productId: string, body: { barcode?: string; barcode_type?: string; kind?: string }) =>
+    request<ProductBarcode>(`/products/${productId}/barcodes`, { method: "POST", body }),
+  deleteProductBarcode: (barcodeId: string) => request<void>(`/products/barcodes/${barcodeId}`, { method: "DELETE" }),
+
+  // Pharmacy — batches & expiry
+  listBatches: (productId?: string) => request<ProductBatch[]>(`/pharmacy/batches${productId ? `?product_id=${productId}` : ""}`),
+  addBatch: (body: unknown) => request<ProductBatch>("/pharmacy/batches", { method: "POST", body }),
+  deleteBatch: (id: string) => request<void>(`/pharmacy/batches/${id}`, { method: "DELETE" }),
+  expiryReport: (days = 90) => request<ProductBatch[]>(`/pharmacy/expiry?days=${days}`),
 
   // Inventory activity feed
   listActivity: (limit = 100) => request<Activity[]>(`/inventory/activity?limit=${limit}`),

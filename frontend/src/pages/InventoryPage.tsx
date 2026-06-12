@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, ArrowDownUp, Download, Plus, Trash2, X } from "lucide-react";
-import { api, type Category, type FieldDef, type Product, type Supplier } from "../lib/api";
+import { AlertTriangle, ArrowDownUp, Download, Plus, Trash2, X, Barcode as BarcodeIcon, Wand2 } from "lucide-react";
+import { api, type Category, type FieldDef, type Product, type ProductBarcode, type Supplier } from "../lib/api";
 import { money } from "../lib/money";
 import ScanInput from "../components/ScanInput";
 
@@ -120,6 +120,31 @@ export default function InventoryPage() {
   // stock movement modal
   const [movingProduct, setMovingProduct] = useState<Product | null>(null);
   const [moveForm, setMoveForm] = useState<MoveForm>(blankMove());
+
+  // multi-barcode manager modal
+  const [bcProduct, setBcProduct]   = useState<Product | null>(null);
+  const [barcodes, setBarcodes]     = useState<ProductBarcode[]>([]);
+  const [bcForm, setBcForm]         = useState({ barcode: "", barcode_type: "EAN13", kind: "alternate" });
+
+  async function openBarcodes(p: Product) {
+    setBcProduct(p); setError(null);
+    try { setBarcodes(await api.listProductBarcodes(p.id)); } catch { setBarcodes([]); }
+  }
+  async function addBarcode(generate: boolean) {
+    if (!bcProduct) return; setError(null);
+    try {
+      await api.addProductBarcode(bcProduct.id, {
+        barcode: generate ? undefined : (bcForm.barcode.trim() || undefined),
+        barcode_type: bcForm.barcode_type, kind: bcForm.kind,
+      });
+      setBcForm({ barcode: "", barcode_type: bcForm.barcode_type, kind: bcForm.kind });
+      setBarcodes(await api.listProductBarcodes(bcProduct.id));
+    } catch (e) { setError(e instanceof Error ? e.message : "Failed to add barcode"); }
+  }
+  async function removeBarcode(id: string) {
+    try { await api.deleteProductBarcode(id); if (bcProduct) setBarcodes(await api.listProductBarcodes(bcProduct.id)); }
+    catch (e) { alert(e instanceof Error ? e.message : "Failed"); }
+  }
 
   // category / supplier forms
   const [catName, setCatName] = useState("");
@@ -373,6 +398,7 @@ export default function InventoryPage() {
                   })}
                   <td className="px-2 py-1">
                     <div className="flex items-center gap-2 justify-end">
+                      <button onClick={() => openBarcodes(p)} className="text-muted hover:text-accent" title="Barcodes"><BarcodeIcon size={14} /></button>
                       <button onClick={() => { setMovingProduct(p); setMoveForm(blankMove()); setError(null); }} className="text-muted hover:text-accent" title="Stock movement"><ArrowDownUp size={14} /></button>
                       <button onClick={() => deleteOne(p.id)} className="text-muted hover:text-danger" title="Delete"><Trash2 size={14} /></button>
                     </div>
@@ -513,6 +539,66 @@ export default function InventoryPage() {
               <button type="submit" className="px-4 py-2 text-sm rounded-md bg-accent text-white font-medium">Record</button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Multiple barcodes manager */}
+      {bcProduct && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
+          <div className="bg-surface border border-line rounded-lg p-6 w-full max-w-lg space-y-4 shadow-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold">Barcodes — {bcProduct.name}</h2>
+              <button onClick={() => setBcProduct(null)} className="text-muted hover:text-ink"><X size={18} /></button>
+            </div>
+
+            {/* Primary barcode (lives on the product) */}
+            <div className="rounded-md border border-line bg-paper/50 px-3 py-2 text-sm flex items-center justify-between">
+              <div>
+                <span className="text-xs uppercase tracking-wide text-muted mr-2">Primary</span>
+                <span className="font-mono">{bcProduct.barcode || "—"}</span>
+                {bcProduct.barcode_type && <span className="text-xs text-muted ml-2">({bcProduct.barcode_type})</span>}
+              </div>
+              <span className="text-[10px] text-muted">edit in the grid's Barcode cell</span>
+            </div>
+
+            {/* Alternate barcodes */}
+            <div className="space-y-1">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted">Additional barcodes</div>
+              {barcodes.length === 0 && <p className="text-sm text-muted">No additional barcodes. Add a supplier/internal/secondary code below — any of them will scan to this product.</p>}
+              {barcodes.map((b) => (
+                <div key={b.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono">{b.barcode}</span>
+                    <span className="text-[10px] rounded bg-line/50 px-1.5 py-0.5 text-muted">{b.barcode_type}</span>
+                    <span className="text-[10px] rounded bg-accent-soft px-1.5 py-0.5 text-accent capitalize">{b.kind}</span>
+                  </div>
+                  <button onClick={() => removeBarcode(b.id)} className="text-muted hover:text-danger"><Trash2 size={14} /></button>
+                </div>
+              ))}
+            </div>
+
+            {/* Add */}
+            <div className="border-t border-line pt-3 space-y-2">
+              <div className="grid grid-cols-3 gap-2">
+                <label className="block col-span-3"><span className="text-[11px] text-muted">Barcode value (blank = generate)</span>
+                  <input className={`${inputCls} mt-1 font-mono`} placeholder="scan or type… leave blank to auto-generate"
+                    value={bcForm.barcode} onChange={(e) => setBcForm({ ...bcForm, barcode: e.target.value })} /></label>
+                <label className="block"><span className="text-[11px] text-muted">Type</span>
+                  <select className={`${inputCls} mt-1`} value={bcForm.barcode_type} onChange={(e) => setBcForm({ ...bcForm, barcode_type: e.target.value })}>
+                    {["EAN13","EAN8","UPCA","UPCE","CODE128","CODE39","QR"].map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select></label>
+                <label className="block"><span className="text-[11px] text-muted">Kind</span>
+                  <select className={`${inputCls} mt-1`} value={bcForm.kind} onChange={(e) => setBcForm({ ...bcForm, kind: e.target.value })}>
+                    {["alternate","secondary","supplier","internal"].map((k) => <option key={k} value={k} className="capitalize">{k}</option>)}
+                  </select></label>
+                <div className="flex items-end gap-2">
+                  <button onClick={() => addBarcode(false)} className="flex-1 rounded-md bg-accent text-white px-3 py-2 text-sm font-medium flex items-center justify-center gap-1"><Plus size={14} /> Add</button>
+                  <button onClick={() => addBarcode(true)} title="Generate unique" className="rounded-md border border-line px-2.5 py-2 hover:bg-line/50"><Wand2 size={15} /></button>
+                </div>
+              </div>
+              {error && <p className="text-sm text-danger">{error}</p>}
+            </div>
+          </div>
         </div>
       )}
     </div>
