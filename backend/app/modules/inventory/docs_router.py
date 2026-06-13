@@ -14,6 +14,7 @@ from sqlalchemy import and_, case, func, select, text
 from app.auth.deps import get_request_context
 from app.db.models import InventoryDoc, InventoryDocItem, Product, StockMovement
 from app.modules.inventory.activity import log_activity
+from app.modules.pharmacy.expiry import consume_batches_fefo
 from app.modules.inventory.schemas import (
     DocIn, DocItemOut, DocOut, InventorySummary, LowStockItem, PeriodStat,
 )
@@ -117,6 +118,7 @@ async def create_document(body: DocIn, ctx=Depends(get_request_context)):
                 mtype = "in"
             else:
                 p.stock_qty = float(p.stock_qty) - it.quantity
+                await consume_batches_fefo(session, p.id, float(it.quantity))
                 mtype = "out"
             session.add(StockMovement(
                 tenant_id=user.tenant_id, product_id=p.id, movement_type=mtype,

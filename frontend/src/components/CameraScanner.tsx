@@ -36,7 +36,14 @@ export default function CameraScanner({
   const codeRef = useRef("");    // last accepted code
 
   useEffect(() => {
-    const reader = new BrowserMultiFormatReader(HINTS);
+    // zxing defaults to 500ms between decode attempts AND 500ms after each
+    // success — i.e. only ~2 reads/sec, which feels ~10× slower than a real
+    // scanner. Drop both to ~30ms for ~16× more attempts per second so a
+    // barcode is picked up almost the instant it enters the frame.
+    const reader = new BrowserMultiFormatReader(HINTS, {
+      delayBetweenScanAttempts: 30,
+      delayBetweenScanSuccess: 30,
+    });
     let controls: { stop: () => void } | undefined;
     let cancelled = false;
 
@@ -66,7 +73,12 @@ export default function CameraScanner({
         } else {
           try {
             controls = await reader.decodeFromConstraints(
-              { video: { facingMode: { ideal: "environment" } } }, videoRef.current!, onResult);
+              { video: {
+                facingMode: { ideal: "environment" },
+                // Cap resolution: smaller frames decode much faster (fewer
+                // pixels to binarise) without hurting reads at normal distance.
+                width: { ideal: 1280 }, height: { ideal: 720 },
+              } }, videoRef.current!, onResult);
           } catch {
             controls = await reader.decodeFromVideoDevice(undefined, videoRef.current!, onResult);
           }

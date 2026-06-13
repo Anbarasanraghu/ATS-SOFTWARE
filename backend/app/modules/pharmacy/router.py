@@ -12,8 +12,8 @@ from sqlalchemy import select
 from app.auth.deps import get_request_context
 from app.db.models import Product, ProductBatch, StockMovement
 from app.modules.inventory.activity import log_activity
-from app.modules.pharmacy.expiry import batch_status
-from app.modules.pharmacy.schemas import BatchIn, BatchOut
+from app.modules.pharmacy.expiry import NEAR_DAYS, batch_status
+from app.modules.pharmacy.schemas import BatchIn, BatchOut, BatchSummary
 
 router = APIRouter()
 
@@ -23,7 +23,9 @@ def _out(b: ProductBatch, name: str) -> BatchOut:
     return BatchOut(
         id=str(b.id), product_id=str(b.product_id), product_name=name,
         batch_no=b.batch_no, mfg_date=b.mfg_date, expiry_date=b.expiry_date,
-        quantity=float(b.quantity), status=st, days_to_expiry=days, created_at=b.created_at,
+        quantity=float(b.quantity),
+        mrp=float(b.mrp) if b.mrp is not None else None, manufacturer=b.manufacturer,
+        status=st, days_to_expiry=days, created_at=b.created_at,
     )
 
 
@@ -48,7 +50,8 @@ async def add_batch(body: BatchIn, ctx=Depends(get_request_context)):
     b = ProductBatch(
         tenant_id=user.tenant_id, product_id=p.id, batch_no=body.batch_no,
         mfg_date=body.mfg_date, expiry_date=body.expiry_date,
-        quantity=body.quantity, created_by=user.id,
+        quantity=body.quantity, mrp=body.mrp, manufacturer=body.manufacturer,
+        created_by=user.id,
     )
     session.add(b)
     # A new batch is received stock.
@@ -76,6 +79,33 @@ async def delete_batch(batch_id: str, ctx=Depends(get_request_context)):
     if p and float(b.quantity):
         p.stock_qty = max(0.0, float(p.stock_qty) - float(b.quantity))
     await session.delete(b)
+
+
+@router.get("/summary", response_model=BatchSummary)
+async def batch_summary(ctx=Depends(get_request_context)):
+    """Headline batch stats for the pharmacy dashboard."""
+    rows = (await ctx["session"].execute(select(ProductBatch))).scalars().all()
+    today = date.today()
+    sellable_units = expired_units = stock_value = 0.0
+    near_count = expired_count = 0
+    for b in rows:
+        q = float(b.quantity)
+        if q <= 0:
+            continue
+        if b.expiry_date is not None and b.expiry_date < today:
+            expired_count += 1
+            expired_units += q
+            continue
+        sellable_units += q
+        stock_value += q * float(b.mrp or 0)
+        if b.expiry_date is not None and (b.expiry_date - today).days <= NEAR_DAYS:
+            near_count += 1
+    return BatchSummary(
+        batches=len([b for b in rows if float(b.quantity) > 0]),
+        sellable_units=round(sellable_units, 3), near_count=near_count,
+        expired_count=expired_count, expired_units=round(expired_units, 3),
+        stock_value=round(stock_value, 2),
+    )
 
 
 @router.get("/expiry", response_model=list[BatchOut])

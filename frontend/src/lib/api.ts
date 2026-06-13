@@ -69,7 +69,12 @@ export interface ProductBarcode { id: string; barcode: string; barcode_type: str
 export interface ProductBatch {
   id: string; product_id: string; product_name: string;
   batch_no: string | null; mfg_date: string | null; expiry_date: string | null;
-  quantity: number; status: "ok" | "near" | "expired"; days_to_expiry: number | null; created_at: string;
+  quantity: number; mrp: number | null; manufacturer: string | null;
+  status: "ok" | "near" | "expired"; days_to_expiry: number | null; created_at: string;
+}
+export interface BatchSummary {
+  batches: number; sellable_units: number; near_count: number;
+  expired_count: number; expired_units: number; stock_value: number;
 }
 export interface StockMovement {
   id: string; product_id: string; product_name: string;
@@ -242,6 +247,7 @@ export const api = {
   addBatch: (body: unknown) => request<ProductBatch>("/pharmacy/batches", { method: "POST", body }),
   deleteBatch: (id: string) => request<void>(`/pharmacy/batches/${id}`, { method: "DELETE" }),
   expiryReport: (days = 90) => request<ProductBatch[]>(`/pharmacy/expiry?days=${days}`),
+  batchSummary: () => request<BatchSummary>("/pharmacy/summary"),
 
   // Inventory activity feed
   listActivity: (limit = 100) => request<Activity[]>(`/inventory/activity?limit=${limit}`),

@@ -127,6 +127,8 @@ class ProductBatch(Base):
     mfg_date: Mapped[date | None] = mapped_column(Date)
     expiry_date: Mapped[date | None] = mapped_column(Date)
     quantity: Mapped[float] = mapped_column(Numeric(14, 3), default=0)
+    mrp: Mapped[float | None] = mapped_column(Numeric(14, 2))
+    manufacturer: Mapped[str | None] = mapped_column(String)
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

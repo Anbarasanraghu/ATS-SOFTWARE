@@ -8,6 +8,7 @@ from app.modules.billing.schemas import (
     PaymentIn, PaymentOut, StatusIn,
 )
 from app.modules.inventory.activity import log_activity
+from app.modules.pharmacy.expiry import consume_batches_fefo
 
 router = APIRouter()
 
@@ -142,6 +143,7 @@ async def create_invoice(body: InvoiceIn, ctx=Depends(get_request_context)):
         p = products.get(item_data.product_id) if item_data.product_id else None
         if p:
             p.stock_qty = float(p.stock_qty) - float(item_data.quantity)
+            await consume_batches_fefo(session, p.id, float(item_data.quantity))
             session.add(StockMovement(
                 tenant_id=user.tenant_id, product_id=p.id, movement_type="out",
                 quantity=item_data.quantity, reference=invoice_number,

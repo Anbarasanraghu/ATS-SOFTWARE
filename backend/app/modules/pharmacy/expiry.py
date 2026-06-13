@@ -21,6 +21,29 @@ def batch_status(expiry: date | None, today: date | None = None) -> tuple[str, i
     return "ok", days
 
 
+async def consume_batches_fefo(session, product_id, qty: float) -> None:
+    """Deduct `qty` from a product's batches, earliest-expiry first (FEFO),
+    skipping expired batches. No-op if the product isn't batch-tracked. Keeps
+    batch quantities in step with sales so expiry status stays accurate."""
+    if not qty or qty <= 0:
+        return
+    today = date.today()
+    rows = (await session.execute(
+        select(ProductBatch)
+        .where(ProductBatch.product_id == product_id, ProductBatch.quantity > 0)
+        .order_by(ProductBatch.expiry_date.asc().nullslast())
+    )).scalars().all()
+    remaining = float(qty)
+    for b in rows:
+        if remaining <= 0:
+            break
+        if b.expiry_date is not None and b.expiry_date < today:
+            continue  # never sell expired stock
+        take = min(remaining, float(b.quantity))
+        b.quantity = round(float(b.quantity) - take, 3)
+        remaining -= take
+
+
 async def product_expiry_status(session, product_id) -> dict:
     """Roll batches up to a product-level sellability verdict for the POS."""
     rows = (await session.execute(

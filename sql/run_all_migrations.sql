@@ -537,6 +537,10 @@ do $$ begin
   end if;
 end $$;
 
+-- ── 015: pharmacy batch extras (MRP, manufacturer) ──────────
+alter table product_batches add column if not exists mrp          numeric(14,2);
+alter table product_batches add column if not exists manufacturer text;
+
 -- Enable all core modules for any existing tenants that don't have them yet
 insert into tenant_modules (tenant_id, module_id, enabled)
 select t.id, m.id, true
