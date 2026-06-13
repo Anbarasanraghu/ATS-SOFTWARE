@@ -1,4 +1,4 @@
-const BASE = "http://localhost:8001";
+const BASE = "http://localhost:8000";
 
 let token: string | null = localStorage.getItem("erp_token");
 
@@ -21,6 +21,10 @@ async function request<T>(
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
+    if (res.status === 401) {
+      setToken(null);
+      window.dispatchEvent(new CustomEvent("auth:expired"));
+    }
     let detail = res.statusText;
     try { const d = await res.json(); if (typeof d.detail === "string") detail = d.detail; } catch { /* */ }
     throw new Error(detail);
@@ -88,8 +92,47 @@ export interface Invoice {
 // ── CRM ──────────────────────────────────────────────────────
 export interface Customer {
   id: string; name: string; email: string | null; phone: string | null;
-  company: string | null; address: string | null; notes: string | null;
-  status: "active" | "inactive"; custom_fields: Record<string, unknown>; created_at: string;
+  whatsapp: string | null; company: string | null; address: string | null;
+  notes: string | null; status: string;
+  crm_status: string; priority: string;
+  source: string | null; interested_service: string | null;
+  requirement_details: string | null; assigned_staff: string | null;
+  first_followup_date: string | null; first_followup_time: string | null;
+  last_followup_date: string | null; next_followup_date: string | null;
+  tags: string[];
+  payment_status: string | null;
+  custom_fields: Record<string, unknown>; created_at: string; updated_at: string | null;
+}
+export interface CustomerPaymentFollowup {
+  id: string; customer_id: string;
+  invoice_number: string | null; invoice_amount: number; paid_amount: number; balance_amount: number;
+  payment_status: string; payment_notes: string | null;
+  next_payment_followup_date: string | null;
+  reminder_needed: boolean; created_by: string | null; created_at: string;
+}
+export interface FollowupReportRow {
+  customer_name: string; customer_phone: string | null; assigned_staff: string | null;
+  followup_mode: string; followup_status: string; notes: string | null;
+  next_followup_date: string | null; created_at: string;
+}
+export interface PaymentFollowupReportRow {
+  id: string; customer_id: string;
+  customer_name: string; customer_phone: string | null; customer_company: string | null;
+  invoice_number: string | null; invoice_amount: number; paid_amount: number; balance_amount: number;
+  payment_status: string; payment_notes: string | null;
+  next_payment_followup_date: string | null; reminder_needed: boolean; created_at: string;
+}
+export const PAYMENT_STATUSES = [
+  { value: "invoice_sent",           label: "Invoice Sent" },
+  { value: "payment_pending",        label: "Payment Pending" },
+  { value: "partially_paid",         label: "Partially Paid" },
+  { value: "payment_completed",      label: "Payment Completed" },
+  { value: "payment_reminder_sent",  label: "Payment Reminder Sent" },
+];
+export interface CustomerFollowup {
+  id: string; customer_id: string; followup_mode: string; followup_status: string;
+  notes: string | null; next_followup_date: string | null; next_followup_time: string | null;
+  reminder_needed: boolean; created_by: string | null; created_at: string;
 }
 export interface Interaction {
   id: string; type: string; subject: string | null; body: string; created_at: string;
@@ -98,6 +141,29 @@ export interface CustomerInvoice {
   id: string; invoice_number: string; issue_date: string | null; due_date: string | null;
   total: number; amount_paid: number; status: string;
 }
+
+export const CRM_STATUSES: { value: string; label: string; cls: string }[] = [
+  { value: "new_lead",          label: "New Lead",           cls: "bg-blue-100 text-blue-700" },
+  { value: "contacted",         label: "Contacted",          cls: "bg-purple-100 text-purple-700" },
+  { value: "interested",        label: "Interested",         cls: "bg-green-100 text-green-700" },
+  { value: "demo_scheduled",    label: "Demo Scheduled",     cls: "bg-teal-100 text-teal-700" },
+  { value: "quotation_sent",    label: "Quotation Sent",     cls: "bg-indigo-100 text-indigo-700" },
+  { value: "follow_up_pending", label: "Follow-up Pending",  cls: "bg-orange-100 text-orange-700" },
+  { value: "converted",         label: "Converted",          cls: "bg-emerald-200 text-emerald-800" },
+  { value: "lost",              label: "Lost",               cls: "bg-red-100 text-red-700" },
+  { value: "not_interested",    label: "Not Interested",     cls: "bg-zinc-100 text-zinc-500" },
+];
+
+export const PRIORITIES: { value: string; label: string; cls: string }[] = [
+  { value: "high",   label: "High",   cls: "bg-red-100 text-red-700" },
+  { value: "medium", label: "Medium", cls: "bg-amber-100 text-amber-700" },
+  { value: "low",    label: "Low",    cls: "bg-gray-100 text-gray-500" },
+];
+
+export const FOLLOWUP_MODES = ["Call", "WhatsApp", "Email", "Meeting", "Payment"];
+export const SOURCES = ["Website", "Phone Call", "WhatsApp", "Reference", "Walk-in", "Social Media", "Existing Customer"];
+export const SERVICES = ["Billing Software", "CRM Software", "Inventory Software", "Invoice Software",
+  "Website Development", "Mobile App Development", "Custom Software", "Other"];
 
 // ── HR ────────────────────────────────────────────────────────
 export interface Department { id: string; name: string; description: string | null; created_at: string; }
@@ -185,6 +251,8 @@ export const api = {
   getCustomer: (id: string) => request<Customer>(`/customers/${id}`),
   createCustomer: (body: unknown) => request<Customer>("/customers", { method: "POST", body }),
   updateCustomer: (id: string, body: unknown) => request<Customer>(`/customers/${id}`, { method: "PUT", body }),
+  patchCrmStatus: (id: string, crm_status: string) =>
+    request<Customer>(`/customers/${id}/crm-status`, { method: "PATCH", body: { crm_status } }),
   deleteCustomer: (id: string) => request<void>(`/customers/${id}`, { method: "DELETE" }),
   customerInvoices: (id: string) => request<CustomerInvoice[]>(`/customers/${id}/invoices`),
   listInteractions: (customerId: string) => request<Interaction[]>(`/customers/${customerId}/interactions`),
@@ -192,6 +260,15 @@ export const api = {
     request<Interaction>(`/customers/${customerId}/interactions`, { method: "POST", body }),
   deleteInteraction: (customerId: string, interactionId: string) =>
     request<void>(`/customers/${customerId}/interactions/${interactionId}`, { method: "DELETE" }),
+  listFollowups: (customerId: string) => request<CustomerFollowup[]>(`/customers/${customerId}/followups`),
+  addFollowup: (customerId: string, body: unknown) =>
+    request<CustomerFollowup>(`/customers/${customerId}/followups`, { method: "POST", body }),
+  listPaymentFollowups: (customerId: string) =>
+    request<CustomerPaymentFollowup[]>(`/customers/${customerId}/payment-followups`),
+  addPaymentFollowup: (customerId: string, body: unknown) =>
+    request<CustomerPaymentFollowup>(`/customers/${customerId}/payment-followups`, { method: "POST", body }),
+  followupsReport: () => request<FollowupReportRow[]>("/customers/follow-ups-report"),
+  paymentFollowupsReport: () => request<PaymentFollowupReportRow[]>("/customers/payment-followups-report"),
 
   // Reports
   reportSummary: () => request<ReportSummary>("/reports/summary"),
