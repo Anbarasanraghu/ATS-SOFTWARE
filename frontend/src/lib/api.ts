@@ -167,6 +167,7 @@ export const SERVICES = ["Billing Software", "CRM Software", "Inventory Software
 
 // ── HR ────────────────────────────────────────────────────────
 export interface Department { id: string; name: string; description: string | null; created_at: string; }
+export interface Designation { id: string; name: string; department_id: string | null; created_at: string; }
 export interface Employee {
   id: string; employee_no: string | null; full_name: string;
   email: string | null; phone: string | null;
@@ -174,6 +175,61 @@ export interface Employee {
   hire_date: string | null; status: string;
   salary: number | null; annual_leave_balance: number;
   notes: string | null; custom_fields: Record<string, unknown>; created_at: string;
+  // Extended fields
+  designation: string | null;
+  work_location: string | null;
+  employee_type: string | null;
+  work_shift: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  address: string | null;
+  reporting_manager_id: string | null;
+  family_details: Record<string, unknown>;
+  insurance_details: Record<string, unknown>;
+  system_details: Record<string, unknown>;
+}
+export interface EmployeeTask {
+  id: string; employee_id: string; title: string; description: string | null;
+  project_client: string | null; priority: string; status: string;
+  due_date: string | null; assigned_by: string | null; notes: string | null;
+  notify_employee: boolean; employee_remarks: string | null; created_at: string;
+}
+export interface EmployeeWorkReport {
+  id: string; employee_id: string; report_date: string; report_type: string | null;
+  work_type: string | null; project_client: string | null; work_summary: string | null;
+  hours_worked: number | null; status: string; manager_remarks: string | null; created_at: string;
+}
+export interface EmployeeCallLog {
+  id: string; employee_id: string; call_date: string;
+  customer_client_name: string | null; phone_number: string | null;
+  call_type: string | null; call_status: string | null;
+  duration: string | null; notes: string | null; followup_required: boolean;
+  next_followup_date: string | null; created_at: string;
+}
+export interface EmployeeProject {
+  id: string; employee_id: string; project_name: string;
+  client_name: string | null; employee_role: string | null;
+  start_date: string | null; end_date: string | null;
+  status: string; project_notes: string | null; created_at: string;
+}
+export interface EmployeePermission {
+  module: string; label: string; has_access: boolean;
+}
+export interface EmployeeMessage {
+  id: string; employee_id: string; subject: string | null;
+  message: string; send_via: string; priority: string; status: string;
+  message_type: string; related_module: string | null; related_record_id: string | null;
+  created_at: string;
+}
+export interface EmployeeNotification {
+  id: string; employee_id: string; title: string;
+  message: string | null; type: string; is_read: boolean; created_at: string;
+}
+export interface EmployeeLog {
+  id: string; employee_id: string; action: string; details: string | null; created_at: string;
+}
+export interface EmployeeNote {
+  id: string; employee_id: string; note: string; created_at: string;
 }
 export interface LeaveRequest {
   id: string; employee_id: string; employee_name: string;
@@ -280,12 +336,69 @@ export const api = {
   updateDepartment: (id: string, body: unknown) => request<Department>(`/employees/departments/${id}`, { method: "PUT", body }),
   deleteDepartment: (id: string) => request<void>(`/employees/departments/${id}`, { method: "DELETE" }),
 
+  // Designations
+  listDesignations: () => request<Designation[]>("/employees/designations"),
+  createDesignation: (body: unknown) => request<Designation>("/employees/designations", { method: "POST", body }),
+  updateDesignation: (id: string, body: unknown) => request<Designation>(`/employees/designations/${id}`, { method: "PUT", body }),
+  deleteDesignation: (id: string) => request<void>(`/employees/designations/${id}`, { method: "DELETE" }),
+
   // Employees
   listEmployees: () => request<Employee[]>("/employees"),
   getEmployee: (id: string) => request<Employee>(`/employees/${id}`),
   createEmployee: (body: unknown) => request<Employee>("/employees", { method: "POST", body }),
   updateEmployee: (id: string, body: unknown) => request<Employee>(`/employees/${id}`, { method: "PUT", body }),
   deleteEmployee: (id: string) => request<void>(`/employees/${id}`, { method: "DELETE" }),
+  patchEmployeeStatus: (id: string, status: string) =>
+    request<Employee>(`/employees/${id}/status`, { method: "PATCH", body: { status } }),
+
+  // Employee tasks
+  listEmployeeTasks: (id: string) => request<EmployeeTask[]>(`/employees/${id}/tasks`),
+  createEmployeeTask: (id: string, body: unknown) => request<EmployeeTask>(`/employees/${id}/tasks`, { method: "POST", body }),
+  updateEmployeeTask: (id: string, taskId: string, body: unknown) =>
+    request<EmployeeTask>(`/employees/${id}/tasks/${taskId}`, { method: "PUT", body }),
+  deleteEmployeeTask: (id: string, taskId: string) =>
+    request<void>(`/employees/${id}/tasks/${taskId}`, { method: "DELETE" }),
+
+  // Employee work reports
+  listWorkReports: (id: string) => request<EmployeeWorkReport[]>(`/employees/${id}/work-reports`),
+  createWorkReport: (id: string, body: unknown) => request<EmployeeWorkReport>(`/employees/${id}/work-reports`, { method: "POST", body }),
+  deleteWorkReport: (id: string, reportId: string) =>
+    request<void>(`/employees/${id}/work-reports/${reportId}`, { method: "DELETE" }),
+
+  // Employee call logs
+  listCallLogs: (id: string) => request<EmployeeCallLog[]>(`/employees/${id}/call-logs`),
+  createCallLog: (id: string, body: unknown) => request<EmployeeCallLog>(`/employees/${id}/call-logs`, { method: "POST", body }),
+  deleteCallLog: (id: string, logId: string) =>
+    request<void>(`/employees/${id}/call-logs/${logId}`, { method: "DELETE" }),
+
+  // Employee projects
+  listEmployeeProjects: (id: string) => request<EmployeeProject[]>(`/employees/${id}/projects`),
+  createEmployeeProject: (id: string, body: unknown) => request<EmployeeProject>(`/employees/${id}/projects`, { method: "POST", body }),
+  deleteEmployeeProject: (id: string, projId: string) =>
+    request<void>(`/employees/${id}/projects/${projId}`, { method: "DELETE" }),
+
+  // Employee logs & notes
+  listEmployeeLogs: (id: string) => request<EmployeeLog[]>(`/employees/${id}/logs`),
+  listEmployeeNotes: (id: string) => request<EmployeeNote[]>(`/employees/${id}/notes`),
+  createEmployeeNote: (id: string, body: unknown) => request<EmployeeNote>(`/employees/${id}/notes`, { method: "POST", body }),
+  deleteEmployeeNote: (id: string, noteId: string) =>
+    request<void>(`/employees/${id}/notes/${noteId}`, { method: "DELETE" }),
+
+  // Employee leave history (per-employee)
+  listEmployeeLeaveHistory: (id: string) => request<LeaveRequest[]>(`/employees/${id}/leave-history`),
+
+  // Employee permissions
+  listPermissions: (id: string) => request<EmployeePermission[]>(`/employees/${id}/permissions`),
+  updatePermissions: (id: string, body: unknown) =>
+    request<EmployeePermission[]>(`/employees/${id}/permissions`, { method: "PUT", body }),
+
+  // Employee messages
+  listMessages: (id: string) => request<EmployeeMessage[]>(`/employees/${id}/messages`),
+  sendMessage: (id: string, body: unknown) =>
+    request<EmployeeMessage>(`/employees/${id}/messages`, { method: "POST", body }),
+
+  // Employee notifications
+  listNotifications: (id: string) => request<EmployeeNotification[]>(`/employees/${id}/notifications`),
 
   // Leave requests
   listLeaveRequests: () => request<LeaveRequest[]>("/employees/leave-requests"),
