@@ -72,7 +72,8 @@ export interface StockMovement {
 // ── Billing ──────────────────────────────────────────────────
 export interface InvoiceItem {
   id: string; product_id: string | null; description: string;
-  quantity: number; unit_price: number; tax_percent: number; line_total: number;
+  quantity: number; unit_price: number; tax_percent: number;
+  discount: number; discount_type: string; line_total: number;
 }
 export interface Payment {
   id: string; invoice_id: string; amount: number;
@@ -81,10 +82,12 @@ export interface Payment {
 }
 export interface Invoice {
   id: string; customer_id: string | null; invoice_number: string;
-  customer_name: string; customer_email: string | null;
+  customer_name: string; customer_email: string | null; customer_phone: string | null;
+  customer_address: string | null; customer_gst: string | null; payment_terms: string | null;
   issue_date: string; due_date: string | null;
   status: "draft" | "sent" | "paid" | "void";
-  notes: string | null; subtotal: number; tax_total: number;
+  notes: string | null; terms: string | null;
+  subtotal: number; tax_total: number; discount_total: number; other_charges: number;
   total: number; amount_paid: number; balance_due: number;
   items?: InvoiceItem[]; payments?: Payment[];
 }
@@ -244,6 +247,36 @@ export interface PayrollRecord {
   status: string; notes: string | null; created_at: string;
 }
 
+// ── Settings ─────────────────────────────────────────────────
+export interface CompanySettings {
+  company_name: string | null;
+  company_logo: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  gst_number: string | null;
+  website: string | null;
+  upi_id: string | null;
+}
+export interface InvoiceSettings {
+  invoice_prefix: string | null;
+  next_invoice_number: number | null;
+  default_tax_percent: number | null;
+  default_payment_terms: string | null;
+  default_terms: string | null;
+  invoice_footer_note: string | null;
+}
+export interface PrintSettings {
+  default_print_size: string;
+  enable_a4_full: boolean;
+  enable_a4_half: boolean;
+  enable_33x55: boolean;
+  show_logo: boolean;
+  show_gst: boolean;
+  show_terms: boolean;
+  show_signature: boolean;
+}
+
 // ── Reports ──────────────────────────────────────────────────
 export interface ReportSummary {
   invoices: { total: number; draft: number; sent: number; paid: number; void: number };
@@ -293,6 +326,7 @@ export const api = {
   // Invoices
   listInvoices: () => request<Invoice[]>("/billing"),
   getInvoice: (id: string) => request<Invoice>(`/billing/${id}`),
+  getNextInvoiceNumber: () => request<{ invoice_number: string }>("/billing/next-number"),
   createInvoice: (body: unknown) => request<Invoice>("/billing", { method: "POST", body }),
   updateInvoiceStatus: (id: string, status: string) =>
     request<Invoice>(`/billing/${id}/status`, { method: "PATCH", body: { status } }),
@@ -413,6 +447,17 @@ export const api = {
   updatePayrollStatus: (id: string, status: string) =>
     request<PayrollRecord>(`/employees/payroll/${id}/status`, { method: "PATCH", body: { status } }),
   deletePayroll: (id: string) => request<void>(`/employees/payroll/${id}`, { method: "DELETE" }),
+
+  // Settings
+  getCompanySettings: () => request<CompanySettings>("/settings/company"),
+  saveCompanySettings: (body: Partial<CompanySettings>) =>
+    request<CompanySettings>("/settings/company", { method: "PATCH", body }),
+  getInvoiceSettings: () => request<InvoiceSettings>("/settings/invoice"),
+  saveInvoiceSettings: (body: Partial<InvoiceSettings>) =>
+    request<InvoiceSettings>("/settings/invoice", { method: "PATCH", body }),
+  getPrintSettings: () => request<PrintSettings>("/settings/print"),
+  savePrintSettings: (body: Partial<PrintSettings>) =>
+    request<PrintSettings>("/settings/print", { method: "PATCH", body }),
 
   // Admin
   adminTenants: () => request<{ id: string; name: string; slug: string; vertical: string }[]>("/admin/tenants"),

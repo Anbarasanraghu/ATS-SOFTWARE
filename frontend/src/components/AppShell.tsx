@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, SlidersHorizontal } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { navForModules } from "./modules";
 import type { ReactNode } from "react";
@@ -20,7 +20,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-paper">
 
       {/* ── Sidebar ── */}
-      <aside className="w-64 bg-surface border-r border-line flex flex-col flex-shrink-0 sticky top-0 h-screen">
+      <aside className="no-print w-64 bg-surface border-r border-line flex flex-col flex-shrink-0 sticky top-0 h-screen">
 
         {/* Logo */}
         <div className="px-5 py-5 border-b border-line">
@@ -48,6 +48,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
               </NavLink>
             );
           })}
+
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive
+                  ? "bg-accent text-white shadow-sm"
+                  : "text-muted hover:text-ink hover:bg-line/60"
+              }`
+            }>
+            <SlidersHorizontal size={16} className="flex-shrink-0" /> Settings
+          </NavLink>
 
           {me?.user?.is_platform_admin && (
             <NavLink
