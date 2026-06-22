@@ -67,7 +67,11 @@ async def login(body: LoginIn):
             ):
                 raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid credentials")
 
-            token = create_access_token(user_id=user.id, tenant_id=tenant.id)
+            token = create_access_token(
+                user_id=user.id, tenant_id=tenant.id,
+                email=user.email, full_name=user.full_name,
+                is_platform_admin=user.is_platform_admin, role=user.role,
+            )
 
     return TokenOut(access_token=token)
 

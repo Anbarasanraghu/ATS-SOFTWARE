@@ -1,12 +1,15 @@
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from app.auth.deps import get_request_context
-from app.db.models import Category, Product, StockMovement, Supplier
+from app.db.models import ActivityLog, Category, Product, StockMovement, Supplier, User
+from app.modules.inventory.activity import log_activity
 from app.modules.inventory.schemas import (
-    CategoryIn, CategoryOut, StockMovementIn, StockMovementOut,
-    SupplierIn, SupplierOut,
+    ActivityOut, CategoryIn, CategoryOut, DailyCount, StockMovementIn,
+    StockMovementOut, SupplierIn, SupplierOut,
 )
 
 router = APIRouter()
@@ -154,9 +157,57 @@ async def create_movement(body: StockMovementIn, ctx=Depends(get_request_context
     )
     session.add(mv)
     await session.flush()
+    await log_activity(
+        session, user, entity="stock", action=body.movement_type,
+        entity_id=product.id, entity_name=product.name,
+        detail={
+            "quantity": body.quantity,
+            "new_stock": float(product.stock_qty),
+            "reference": body.reference,
+        },
+    )
     return StockMovementOut(
         id=str(mv.id), product_id=str(mv.product_id), product_name=product.name,
         movement_type=mv.movement_type, quantity=float(mv.quantity),
         unit_cost=float(mv.unit_cost) if mv.unit_cost is not None else None,
         reference=mv.reference, notes=mv.notes, created_at=mv.created_at,
     )
+
+
+# ── Activity feed (Updates page) ─────────────────────────────
+
+@router.get("/activity", response_model=list[ActivityOut])
+async def list_activity(limit: int = 100, ctx=Depends(get_request_context)):
+    session = ctx["session"]
+    limit = max(1, min(limit, 500))
+    rows = (await session.execute(
+        select(ActivityLog, User.full_name, User.email)
+        .join(User, ActivityLog.created_by == User.id, isouter=True)
+        .order_by(ActivityLog.created_at.desc())
+        .limit(limit)
+    )).all()
+    return [
+        ActivityOut(
+            id=str(a.id), entity=a.entity,
+            entity_id=str(a.entity_id) if a.entity_id else None,
+            entity_name=a.entity_name, action=a.action, detail=a.detail or {},
+            actor=full_name or email, created_at=a.created_at,
+        )
+        for a, full_name, email in rows
+    ]
+
+
+@router.get("/activity/daily", response_model=list[DailyCount])
+async def activity_daily(days: int = 90, ctx=Depends(get_request_context)):
+    """Per-day change counts for the Updates calendar."""
+    session = ctx["session"]
+    days = max(1, min(days, 366))
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    day_col = func.to_char(func.date_trunc("day", ActivityLog.created_at), "YYYY-MM-DD")
+    rows = (await session.execute(
+        select(day_col.label("day"), func.count().label("count"))
+        .where(ActivityLog.created_at >= cutoff)
+        .group_by(day_col)
+        .order_by(day_col)
+    )).all()
+    return [DailyCount(day=r.day, count=r.count) for r in rows]

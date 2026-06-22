@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { Trash2, Plus, Minus, ShoppingCart, Barcode, CheckCircle, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Trash2, Plus, Minus, ShoppingCart, Barcode, CheckCircle, RotateCcw, Camera } from "lucide-react";
 import { api, type Customer, type Product } from "../lib/api";
+import { money } from "../lib/money";
+import CameraScanner from "../components/LazyCameraScanner";
+import { useAuth } from "../auth/AuthContext";
+import { beep } from "../lib/sound";
 
 type CartItem = {
   product: Product;
@@ -12,12 +16,16 @@ type CheckoutState = "idle" | "loading" | "done";
 const METHODS = ["cash", "card", "bank_transfer", "other"];
 
 export default function POSPage() {
+  const { me } = useAuth();
+  const isPharmacy = me?.modules?.includes("medical") ?? false;
   const scanRef = useRef<HTMLInputElement>(null);
   const [cart, setCart]             = useState<CartItem[]>([]);
   const [customers, setCustomers]   = useState<Customer[]>([]);
+  const [products, setProducts]     = useState<Product[]>([]);
   const [scanInput, setScanInput]   = useState("");
   const [scanError, setScanError]   = useState<string | null>(null);
   const [scanning, setScanning]     = useState(false);
+  const [lastAdded, setLastAdded]   = useState<string>("");
   const [customerId, setCustomerId] = useState("");
   const [customerName, setCustomerName] = useState("Walk-in");
   const [method, setMethod]         = useState("cash");
@@ -26,31 +34,66 @@ export default function POSPage() {
 
   useEffect(() => {
     api.listCustomers().then(setCustomers).catch(() => {});
-    // Auto-focus scanner input on mount
+    api.listProducts().then(setProducts).catch(() => {});
     scanRef.current?.focus();
   }, []);
+
+  // Fast in-browser lookup table: primary barcode + SKU → product.
+  const byCode = useMemo(() => {
+    const m = new Map<string, Product>();
+    for (const p of products) {
+      if (p.barcode) m.set(p.barcode, p);
+      if (p.sku) m.set(p.sku, p);
+    }
+    return m;
+  }, [products]);
 
   // Re-focus scanner after any interaction
   function refocus() {
     setTimeout(() => scanRef.current?.focus(), 100);
   }
 
-  async function handleScan(e: { preventDefault(): void }) {
-    e.preventDefault();
-    const code = scanInput.trim();
-    if (!code) return;
-    setScanInput("");
+  const [cam, setCam] = useState(false);
+
+  function addAndFlag(product: Product) {
+    if (product.expiry_status === "expired") {
+      setScanError(`"${product.name}" — all stock is EXPIRED. Sale blocked.`);
+      return;
+    }
+    setScanError(product.expiry_status === "near"
+      ? `⚠ "${product.name}" expires soon (${product.nearest_expiry}). Added — sell first.`
+      : null);
+    addToCart(product);
+    setLastAdded(product.name);
+  }
+
+  async function lookupAndAdd(code: string) {
+    const c = code.trim();
+    if (!c) return;
+    // Pharmacies need server-side expiry status; everyone else gets the instant
+    // local match (no network round-trip) so 5 items in a row scan with no lag.
+    if (!isPharmacy) {
+      const local = byCode.get(c);
+      if (local) { addAndFlag(local); refocus(); return; }
+    }
     setScanError(null);
     setScanning(true);
     try {
-      const product = await api.scanProduct(code);
-      addToCart(product);
+      addAndFlag(await api.scanProduct(c));
     } catch {
-      setScanError(`"${code}" not found — check the barcode or SKU`);
+      setScanError(`"${c}" not found — check the barcode or SKU`);
     } finally {
       setScanning(false);
       refocus();
     }
+  }
+
+  async function handleScan(e: { preventDefault(): void }) {
+    e.preventDefault();
+    const code = scanInput.trim();
+    if (code) beep();   // beep on USB/keyboard read (camera beeps itself)
+    setScanInput("");
+    await lookupAndAdd(code);
   }
 
   function addToCart(product: Product) {
@@ -147,7 +190,7 @@ export default function POSPage() {
           <div className="text-2xl font-bold text-emerald-700">Payment Received</div>
           <div className="text-muted mt-1">{lastInvoice.number}</div>
           <div className="text-4xl font-bold mt-3 font-mono">
-            ${Number(lastInvoice.total).toFixed(2)}
+            {money(lastInvoice.total)}
           </div>
         </div>
         <button onClick={newSale}
@@ -159,10 +202,10 @@ export default function POSPage() {
   }
 
   return (
-    <div className="flex gap-6 h-[calc(100vh-8rem)]">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:h-[calc(100vh-8rem)]">
 
       {/* ── Left: scanner + product search ── */}
-      <div className="flex flex-col gap-4 w-80 flex-shrink-0">
+      <div className="flex flex-col gap-4 w-full lg:w-80 lg:flex-shrink-0">
         <h1 className="text-xl font-semibold flex items-center gap-2">
           <ShoppingCart size={20} /> Point of Sale
         </h1>
@@ -194,22 +237,27 @@ export default function POSPage() {
           {scanError && (
             <p className="text-xs text-danger bg-red-50 rounded-md px-3 py-2">{scanError}</p>
           )}
+          <button type="button" onClick={() => setCam(true)}
+            className="w-full flex items-center justify-center gap-2 rounded-lg border-2 border-accent/50 text-accent py-2.5 text-sm font-medium hover:bg-accent/5">
+            <Camera size={16} /> Scan with camera
+          </button>
           <p className="text-xs text-muted">
-            USB/Bluetooth scanner sends barcode + Enter automatically.
+            USB/Bluetooth scanner types here automatically, or tap the camera.
           </p>
         </form>
+        {cam && <CameraScanner continuous note={lastAdded ? `✓ Added ${lastAdded}` : undefined} onDetect={(code) => void lookupAndAdd(code)} onClose={() => setCam(false)} />}
 
         {/* Quick product list */}
         <div className="flex-1 overflow-y-auto space-y-1">
           <div className="text-xs font-medium uppercase tracking-wide text-muted mb-2">
             All products (click to add)
           </div>
-          <QuickList onAdd={addToCart} />
+          <QuickList products={products} onAdd={addToCart} />
         </div>
       </div>
 
       {/* ── Right: cart + checkout ── */}
-      <div className="flex-1 flex flex-col bg-surface border border-line rounded-xl overflow-hidden">
+      <div className="flex-1 flex flex-col bg-surface border border-line rounded-xl overflow-hidden min-h-[55vh] lg:min-h-0">
 
         {/* Cart header */}
         <div className="px-5 py-3 border-b border-line flex items-center justify-between">
@@ -237,7 +285,7 @@ export default function POSPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-medium text-sm truncate">{item.product.name}</div>
                   <div className="text-xs text-muted">
-                    {item.product.sku ?? item.product.barcode ?? "—"} · ${item.product.price.toFixed(2)} each
+                    {item.product.sku ?? item.product.barcode ?? "—"} · {money(item.product.price)} each
                     {item.product.tax_percent > 0 && ` + ${item.product.tax_percent}% tax`}
                   </div>
                 </div>
@@ -261,7 +309,7 @@ export default function POSPage() {
                 </div>
                 {/* Line total */}
                 <div className="w-20 text-right font-mono text-sm font-semibold">
-                  ${(item.product.price * item.qty).toFixed(2)}
+                  {money(item.product.price * item.qty)}
                 </div>
                 <button onClick={() => removeItem(item.product.id)}
                   className="text-muted hover:text-danger ml-1">
@@ -306,17 +354,17 @@ export default function POSPage() {
             <div className="space-y-0.5 text-sm">
               <div className="flex gap-8 text-muted">
                 <span>Subtotal</span>
-                <span className="font-mono">${subtotal.toFixed(2)}</span>
+                <span className="font-mono">{money(subtotal)}</span>
               </div>
               {taxTotal > 0 && (
                 <div className="flex gap-8 text-muted">
                   <span>Tax</span>
-                  <span className="font-mono">${taxTotal.toFixed(2)}</span>
+                  <span className="font-mono">{money(taxTotal)}</span>
                 </div>
               )}
               <div className="flex gap-8 font-bold text-lg pt-1 border-t border-line">
                 <span>Total</span>
-                <span className="font-mono">${total.toFixed(2)}</span>
+                <span className="font-mono">{money(total)}</span>
               </div>
             </div>
 
@@ -325,7 +373,7 @@ export default function POSPage() {
               disabled={cart.length === 0 || checkoutState === "loading"}
               onClick={checkout}
               className="rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white px-8 py-4 text-lg font-bold transition-colors">
-              {checkoutState === "loading" ? "Processing…" : `Charge $${total.toFixed(2)}`}
+              {checkoutState === "loading" ? "Processing…" : `Charge ${money(total)}`}
             </button>
           </div>
         </div>
@@ -335,11 +383,8 @@ export default function POSPage() {
 }
 
 // ── Quick product picker list ────────────────────────────────
-function QuickList({ onAdd }: { onAdd: (p: Product) => void }) {
-  const [products, setProducts] = useState<Product[]>([]);
+function QuickList({ onAdd, products }: { onAdd: (p: Product) => void; products: Product[] }) {
   const [search, setSearch]     = useState("");
-
-  useEffect(() => { api.listProducts().then(setProducts).catch(() => {}); }, []);
 
   const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -363,7 +408,7 @@ function QuickList({ onAdd }: { onAdd: (p: Product) => void }) {
             <div className="font-medium truncate">{p.name}</div>
             <div className="text-muted flex items-center justify-between mt-0.5">
               <span>{p.barcode ?? p.sku ?? "—"}</span>
-              <span className="font-mono font-semibold text-ink">${p.price.toFixed(2)}</span>
+              <span className="font-mono font-semibold text-ink">{money(p.price)}</span>
             </div>
           </button>
         ))}

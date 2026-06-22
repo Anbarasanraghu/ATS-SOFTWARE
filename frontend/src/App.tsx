@@ -4,6 +4,13 @@ import AppShell from "./components/AppShell";
 import LoginPage from "./pages/LoginPage";
 import POSPage from "./pages/POSPage";
 import ProductsPage from "./pages/ProductsPage";
+import InventoryPage from "./pages/InventoryPage";
+import ScanStockPage from "./pages/ScanStockPage";
+import PharmacyPage from "./pages/PharmacyPage";
+import UpdatesPage from "./pages/UpdatesPage";
+import DocumentsPage from "./pages/DocumentsPage";
+import InventoryReportsPage from "./pages/InventoryReportsPage";
+import BarcodeLabelsPage from "./pages/BarcodeLabelsPage";
 import BillingPage from "./pages/BillingPage";
 import InvoiceDetailPage from "./pages/InvoiceDetailPage";
 import NewInvoicePage from "./pages/NewInvoicePage";
@@ -30,6 +37,15 @@ export default function App() {
     <AppShell>
       <Routes>
         <Route path="/pos"            element={<POSPage />} />
+        <Route path="/inventory"      element={<InventoryPage />} />
+        <Route path="/scan-stock"     element={<ScanStockPage />} />
+        <Route path="/pharmacy"          element={<PharmacyPage mode="batches" />} />
+        <Route path="/pharmacy/expiry"   element={<PharmacyPage mode="expiry" />} />
+        <Route path="/purchases"      element={<DocumentsPage docType="purchase" />} />
+        <Route path="/sales"          element={<DocumentsPage docType="sale" />} />
+        <Route path="/inventory-reports" element={<InventoryReportsPage />} />
+        <Route path="/barcodes"       element={<BarcodeLabelsPage />} />
+        <Route path="/updates"        element={<UpdatesPage />} />
         <Route path="/products"       element={<ProductsPage />} />
         <Route path="/billing"        element={<BillingPage />} />
         <Route path="/billing/new"    element={<NewInvoicePage />} />

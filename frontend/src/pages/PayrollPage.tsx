@@ -9,6 +9,13 @@ import { api, type Employee, type Payroll, type PayrollStats, type LeaveSummary,
 // ── Constants ─────────────────────────────────────────────────
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const EARNINGS: [string, string][] = [
+  ["basic","Basic"],["hra","HRA"],["da","DA"],["conveyance","Conveyance"],
+  ["medical","Medical"],["special","Special"],["bonus","Bonus"],["overtime","Overtime"],["other","Other"],
+];
+const DEDUCTIONS: [string, string][] = [
+  ["pf","PF"],["esi","ESI"],["pt","Prof. Tax"],["tds","TDS"],["loan","Loan"],["advance","Advance"],
+];
 const now = new Date();
 const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
 
@@ -993,8 +1000,14 @@ export default function PayrollPage() {
       await refresh();
     } catch(err) { alert(err instanceof Error ? err.message : "Failed"); }
   }
-
-  async function handleDelete(id: string) {
+  async function submitPay(e: { preventDefault(): void }) {
+    e.preventDefault(); if (!payFor) return;
+    try {
+      await api.updatePayrollStatus(payFor.id, { status: "paid", ...payForm });
+      setPayFor(null); await refresh();
+    } catch (err) { alert(err instanceof Error ? err.message : "Failed"); }
+  }
+  async function remove(id: string) {
     if (!confirm("Delete this payroll record?")) return;
     try { await api.deletePayrollEntry(id); await refresh(); }
     catch(err) { alert(err instanceof Error ? err.message : "Failed"); }

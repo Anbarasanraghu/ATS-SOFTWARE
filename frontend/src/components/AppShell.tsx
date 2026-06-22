@@ -1,13 +1,21 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { LogOut, Settings, SlidersHorizontal } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
-import { navForModules } from "./modules";
+import { navForModules, MODULE_NAV } from "./modules";
 import type { ReactNode } from "react";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const { me, logout } = useAuth();
   const navigate = useNavigate();
-  const items = navForModules(me?.modules ?? []);
+  const [open, setOpen] = useState(false);   // mobile drawer
+  // Platform admins see every module; tenants see only what's enabled for them.
+  const items = me?.user?.is_platform_admin ? MODULE_NAV : navForModules(me?.modules ?? []);
+
+  const linkCls = ({ isActive }: { isActive: boolean }) =>
+    `flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
+      isActive ? "bg-accent-soft text-accent font-medium" : "text-ink hover:bg-line/50"
+    }`;
 
   const initials = (me?.user.full_name ?? me?.user.email ?? "?")
     .split(" ")

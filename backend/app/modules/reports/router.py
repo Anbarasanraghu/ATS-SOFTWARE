@@ -1,80 +1,67 @@
+import json
+
 from fastapi import APIRouter, Depends
-from sqlalchemy import case, func, select, text
+from sqlalchemy import func, select, text
 
 from app.auth.deps import get_request_context
-from app.db.models import Customer, Invoice, Product
+from app.db.models import Invoice
 
 router = APIRouter()
+
+# Whole dashboard summary in ONE round trip: invoice aggregates, customer/product
+# counts, and the recent-invoice + top-customer lists (as JSON). RLS keeps every
+# reference tenant-scoped via the tenant context set on the request.
+_SUMMARY_SQL = text("""
+with inv as (
+  select
+    count(*)                                              as total,
+    count(*) filter (where status='draft')                as draft,
+    count(*) filter (where status='sent')                 as sent,
+    count(*) filter (where status='paid')                 as paid,
+    count(*) filter (where status='void')                 as void,
+    coalesce(sum(total) filter (where status='paid'), 0)  as revenue,
+    coalesce(sum(total) filter (where status in ('draft','sent')), 0) as outstanding
+  from invoices
+)
+select
+  inv.total, inv.draft, inv.sent, inv.paid, inv.void, inv.revenue, inv.outstanding,
+  (select count(*) from customers) as customer_count,
+  (select count(*) from products)  as product_count,
+  coalesce((select json_agg(r) from (
+      select id, invoice_number, customer_name, total, status,
+             to_char(issue_date, 'YYYY-MM-DD') as issue_date
+      from invoices order by created_at desc limit 5) r), '[]') as recent_invoices,
+  coalesce((select json_agg(t) from (
+      select customer_name as name, sum(total) as total
+      from invoices where status='paid'
+      group by customer_name order by sum(total) desc limit 5) t), '[]') as top_customers
+from inv
+""")
+
+
+def _as_list(v):
+    return json.loads(v) if isinstance(v, str) else (v or [])
 
 
 @router.get("/summary")
 async def get_summary(ctx=Depends(get_request_context)):
-    session = ctx["session"]
-
-    inv_stats = (await session.execute(
-        select(
-            func.count(Invoice.id).label("total"),
-            func.sum(case((Invoice.status == "draft", 1), else_=0)).label("draft"),
-            func.sum(case((Invoice.status == "sent",  1), else_=0)).label("sent"),
-            func.sum(case((Invoice.status == "paid",  1), else_=0)).label("paid"),
-            func.sum(case((Invoice.status == "void",  1), else_=0)).label("void"),
-            func.coalesce(
-                func.sum(case((Invoice.status == "paid", Invoice.total), else_=None)), 0
-            ).label("revenue"),
-            func.coalesce(
-                func.sum(case((Invoice.status.in_(["draft", "sent"]), Invoice.total), else_=None)), 0
-            ).label("outstanding"),
-        ).select_from(Invoice)
-    )).one()
-
-    customer_count = (await session.execute(
-        select(func.count(Customer.id)).select_from(Customer)
-    )).scalar_one()
-
-    product_count = (await session.execute(
-        select(func.count(Product.id)).select_from(Product)
-    )).scalar_one()
-
-    recent_invoices = (await session.execute(
-        select(Invoice).order_by(Invoice.created_at.desc()).limit(5)
-    )).scalars().all()
-
-    top_customers_rows = (await session.execute(
-        select(Invoice.customer_name, func.sum(Invoice.total).label("total"))
-        .select_from(Invoice)
-        .where(Invoice.status == "paid")
-        .group_by(Invoice.customer_name)
-        .order_by(func.sum(Invoice.total).desc())
-        .limit(5)
-    )).all()
-
+    r = (await ctx["session"].execute(_SUMMARY_SQL)).one()
+    recent = _as_list(r.recent_invoices)
+    for it in recent:
+        it["id"] = str(it["id"])
+        it["total"] = float(it["total"])
+    top = [{"name": t["name"], "total": float(t["total"])} for t in _as_list(r.top_customers)]
     return {
         "invoices": {
-            "total": inv_stats.total or 0,
-            "draft": inv_stats.draft or 0,
-            "sent":  inv_stats.sent  or 0,
-            "paid":  inv_stats.paid  or 0,
-            "void":  inv_stats.void  or 0,
+            "total": r.total or 0, "draft": r.draft or 0, "sent": r.sent or 0,
+            "paid": r.paid or 0, "void": r.void or 0,
         },
-        "revenue":        float(inv_stats.revenue      or 0),
-        "outstanding":    float(inv_stats.outstanding  or 0),
-        "customer_count": customer_count,
-        "product_count":  product_count,
-        "recent_invoices": [
-            {
-                "id":             str(inv.id),
-                "invoice_number": inv.invoice_number,
-                "customer_name":  inv.customer_name,
-                "total":          float(inv.total),
-                "status":         inv.status,
-                "issue_date":     inv.issue_date.isoformat() if inv.issue_date else None,
-            }
-            for inv in recent_invoices
-        ],
-        "top_customers": [
-            {"name": row.customer_name, "total": float(row.total)}
-            for row in top_customers_rows
-        ],
+        "revenue":        float(r.revenue or 0),
+        "outstanding":    float(r.outstanding or 0),
+        "customer_count": r.customer_count or 0,
+        "product_count":  r.product_count or 0,
+        "recent_invoices": recent,
+        "top_customers":   top,
     }
 
 
