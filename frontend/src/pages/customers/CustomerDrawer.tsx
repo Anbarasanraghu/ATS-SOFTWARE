@@ -112,9 +112,9 @@ export default function CustomerDrawer({
     if (!quiet) setLoading(true); else setRefreshing(true);
     try {
       const [fu, inv, pf] = await Promise.all([
-        api.listFollowups(customer.id),
-        api.customerInvoices(customer.id),
-        api.listPaymentFollowups(customer.id),
+        api.listFollowups(customer.id).catch(() => [] as CustomerFollowup[]),
+        api.customerInvoices(customer.id).catch(() => [] as CustomerInvoice[]),
+        api.listPaymentFollowups(customer.id).catch(() => [] as CustomerPaymentFollowup[]),
       ]);
       setFollowups(fu);
       setInvoices(inv);
