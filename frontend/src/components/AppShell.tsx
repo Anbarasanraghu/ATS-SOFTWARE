@@ -12,6 +12,12 @@ export default function AppShell({ children }: { children: ReactNode }) {
   // Platform admins see every module; tenants see only what's enabled for them.
   const items = me?.user?.is_platform_admin ? MODULE_NAV : navForModules(me?.modules ?? []);
 
+  // A parent link (e.g. /pharmacy) must match exactly so it doesn't stay
+  // highlighted on a child route that has its own nav entry (/pharmacy/expiry).
+  // Detail routes without a nav entry (e.g. /customers/:id) keep their parent lit.
+  const isParentOfNav = (path: string) =>
+    items.some((other) => other.path !== path && other.path.startsWith(path + "/"));
+
   const linkCls = ({ isActive }: { isActive: boolean }) =>
     `flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
       isActive ? "bg-accent-soft text-accent font-medium" : "text-ink hover:bg-line/50"
@@ -44,6 +50,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <NavLink
                 key={item.path}
                 to={item.path}
+                end={isParentOfNav(item.path)}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
