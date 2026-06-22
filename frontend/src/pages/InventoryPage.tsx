@@ -97,6 +97,8 @@ export default function InventoryPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [suppliers, setSuppliers]   = useState<Supplier[]>([]);
   const [search, setSearch]         = useState("");
+  const [catFilter, setCatFilter]   = useState("");   // "" = all categories
+  const [supFilter, setSupFilter]   = useState("");   // "" = all suppliers
   const [selected, setSelected]     = useState<Set<string>>(new Set());
   const [error, setError]           = useState<string | null>(null);
   const [tab, setTab]               = useState<"items" | "categories" | "suppliers">("items");
@@ -249,11 +251,16 @@ export default function InventoryPage() {
     catch (err) { alert(err instanceof Error ? err.message : "Failed"); }
   }
 
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.sku ?? "").toLowerCase().includes(search.toLowerCase()) ||
-    (p.barcode ?? "").toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = products.filter((p) => {
+    const q = search.toLowerCase();
+    const matchesSearch =
+      p.name.toLowerCase().includes(q) ||
+      (p.sku ?? "").toLowerCase().includes(q) ||
+      (p.barcode ?? "").toLowerCase().includes(q);
+    const matchesCat = !catFilter || p.category_id === catFilter;
+    const matchesSup = !supFilter || p.supplier_id === supFilter;
+    return matchesSearch && matchesCat && matchesSup;
+  });
 
   function toggle(id: string) {
     setSelected((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
@@ -316,6 +323,22 @@ export default function InventoryPage() {
             <ScanInput onScan={handleScan} className="w-56" placeholder="Scan barcode → stock-in / add…" />
             <input className="rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent w-48"
               placeholder="Search name / SKU / barcode…" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <select className="rounded-md border border-line bg-paper px-2 py-2 text-sm outline-none focus:border-accent max-w-[150px]"
+              value={catFilter} onChange={(e) => setCatFilter(e.target.value)} title="Filter by category">
+              <option value="">All categories</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+            <select className="rounded-md border border-line bg-paper px-2 py-2 text-sm outline-none focus:border-accent max-w-[150px]"
+              value={supFilter} onChange={(e) => setSupFilter(e.target.value)} title="Filter by supplier">
+              <option value="">All suppliers</option>
+              {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            {(catFilter || supFilter || search) && (
+              <button onClick={() => { setSearch(""); setCatFilter(""); setSupFilter(""); }}
+                className="flex items-center gap-1 rounded-md border border-line px-2.5 py-2 text-sm text-muted hover:bg-line/50" title="Clear filters">
+                <X size={15} /> Clear
+              </button>
+            )}
             {selected.size > 0 && (
               <button onClick={deleteSelected}
                 className="flex items-center gap-1 rounded-md bg-danger/10 text-danger border border-danger/30 px-3 py-2 text-sm font-medium">

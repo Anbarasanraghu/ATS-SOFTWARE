@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BrowserMultiFormatReader } from "@zxing/browser";
+import { BrowserMultiFormatReader, BrowserCodeReader } from "@zxing/browser";
 import { DecodeHintType, BarcodeFormat } from "@zxing/library";
 import { Check, X } from "lucide-react";
 import { beep } from "../lib/sound";
@@ -10,6 +10,53 @@ HINTS.set(DecodeHintType.POSSIBLE_FORMATS, [
   BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
   BarcodeFormat.CODE_128, BarcodeFormat.CODE_39, BarcodeFormat.ITF, BarcodeFormat.QR_CODE,
 ]);
+
+// ---------------------------------------------------------------------------
+// Pixel reduction — the real speed lever.
+//
+// Every decode attempt, zxing binarises and scans the WHOLE video frame
+// (1280×720 ≈ 920k px). But the barcode only ever sits inside the green aiming
+// box; all the pixels around it are pure cost to the recogniser. So we override
+// zxing's frame-capture statics to:
+//   1. crop to a centre region-of-interest that covers the guide box, and
+//   2. downscale that crop to ~800px wide.
+// Together that's ~250k px instead of ~920k — roughly 3–4× fewer pixels to
+// binarise and decode each pass, so a code locks in noticeably sooner. No reads
+// are lost: a 1D barcode filling the box still has ~6 px per module, and a
+// centred QR stays within the ROI.
+//
+// The continuous-scan loop calls these as statics by name on the base class, so
+// patching them here changes the capture pipeline for the camera scanner. (This
+// is the only place in the app that decodes from a camera.)
+const ROI_W = 0.85; // keep centre 85% of width  (≥ the 3/4-wide guide box)
+const ROI_H = 0.6;  // keep centre 60% of height (≥ the 1/3-tall guide box; QR-safe)
+const MAX_W = 800;  // downscale cap — fewer pixels to binarise/decode
+
+type RoiCanvas = HTMLCanvasElement & { __roi?: { sx: number; sy: number; sw: number; sh: number } };
+const ZX = BrowserCodeReader as unknown as {
+  createCaptureCanvas: (media: { videoWidth?: number; videoHeight?: number; width?: number; height?: number }) => HTMLCanvasElement;
+  drawImageOnCanvas: (ctx: CanvasRenderingContext2D, media: CanvasImageSource) => void;
+};
+
+ZX.createCaptureCanvas = (media) => {
+  const vw = media.videoWidth || media.width || 1280;
+  const vh = media.videoHeight || media.height || 720;
+  const sw = Math.max(1, Math.round(vw * ROI_W));
+  const sh = Math.max(1, Math.round(vh * ROI_H));
+  const scale = Math.min(1, MAX_W / sw); // never upscale
+  const canvas = document.createElement("canvas") as RoiCanvas;
+  canvas.width = Math.max(1, Math.round(sw * scale));
+  canvas.height = Math.max(1, Math.round(sh * scale));
+  // remember which slice of the source frame to copy on each draw
+  canvas.__roi = { sx: Math.round((vw - sw) / 2), sy: Math.round((vh - sh) / 2), sw, sh };
+  return canvas;
+};
+
+ZX.drawImageOnCanvas = (ctx, media) => {
+  const roi = (ctx.canvas as RoiCanvas).__roi;
+  if (roi) ctx.drawImage(media, roi.sx, roi.sy, roi.sw, roi.sh, 0, 0, ctx.canvas.width, ctx.canvas.height);
+  else ctx.drawImage(media, 0, 0);
+};
 
 /**
  * Camera barcode scanner. Prefers the rear camera (phones) but falls back to
