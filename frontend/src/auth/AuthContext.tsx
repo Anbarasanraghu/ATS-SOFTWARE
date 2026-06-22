@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, getToken, setToken, type Me } from "../lib/api";
+import { api, getToken, setToken, invalidateCompanyCache, type Me } from "../lib/api";
 
 interface AuthState {
   me: Me | null;
@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     setToken(null);
     setMe(null);
+    invalidateCompanyCache();
   }
 
   return (

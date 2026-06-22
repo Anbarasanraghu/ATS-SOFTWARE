@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   Plus, Search, Users, UserCheck, UserX,
   Building2, ChevronDown, MoreVertical, Eye, Pencil, Trash2, Power,
@@ -67,13 +67,22 @@ export default function EmployeesPage() {
   const [desigDeptId, setDesigDeptId]   = useState("");
   const [editingDesig, setEditingDesig] = useState<Designation | null>(null);
 
+  const _loaded = useRef(false);
+
   async function refresh() {
     const [emps, depts, desigs] = await Promise.all([
-      api.listEmployees(), api.listDepartments(), api.listDesignations(),
+      api.listEmployees().catch(() => [] as Employee[]),
+      api.listDepartments().catch(() => [] as Department[]),
+      api.listDesignations().catch(() => [] as Designation[]),
     ]);
     setEmployees(emps); setDepartments(depts); setDesignations(desigs);
   }
-  useEffect(() => { void refresh(); }, []);
+
+  useEffect(() => {
+    if (_loaded.current) return;
+    _loaded.current = true;
+    void refresh();
+  }, []);
 
   const filtered = useMemo(() => {
     let list = employees;

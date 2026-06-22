@@ -247,6 +247,42 @@ export interface PayrollRecord {
   status: string; notes: string | null; created_at: string;
 }
 
+// ── Payroll v2 (comprehensive) ────────────────────────────────
+export interface PayrollAllowanceRow { id: string; allowance_name: string; amount: number; }
+export interface PayrollDeductionRow { id: string; deduction_name: string; amount: number; }
+export interface Payroll {
+  id: string;
+  employee_id: string; employee_name: string; employee_no: string | null;
+  department: string | null; designation: string | null; phone: string | null;
+  payroll_month: string;                  // YYYY-MM
+  basic_salary: number; salary_type: string;
+  total_working_days: number; present_days: number; absent_days: number;
+  late_days: number; early_leave_days: number;
+  total_worked_hours: number; required_working_hours: number;
+  paid_leave_days: number; sick_leave_days: number; casual_leave_days: number;
+  unpaid_leave_days: number; half_day_leave: number; remaining_leave_balance: number;
+  lop_days: number; per_day_salary: number; lop_deduction: number; lop_reason: string | null;
+  normal_ot_hours: number; night_ot_hours: number; holiday_ot_hours: number;
+  per_hour_salary: number;
+  normal_ot_multiplier: number; night_ot_multiplier: number; holiday_ot_multiplier: number;
+  total_ot_amount: number;
+  total_allowances: number; total_deductions: number; gross_salary: number; net_salary: number;
+  payroll_status: string; payment_status: string;
+  payment_date: string | null; payment_method: string | null;
+  transaction_id: string | null; payment_notes: string | null;
+  allowances: PayrollAllowanceRow[]; deductions: PayrollDeductionRow[];
+  created_at: string;
+}
+export interface PayrollStats {
+  total_employees: number; total_payroll: number;
+  paid_count: number; pending_count: number;
+  total_deductions: number; total_ot_amount: number;
+}
+export interface LeaveSummary {
+  paid_leave_days: number; sick_leave_days: number; casual_leave_days: number;
+  unpaid_leave_days: number; half_day_leave: number; remaining_leave_balance: number;
+}
+
 // ── Settings ─────────────────────────────────────────────────
 export interface CompanySettings {
   company_name: string | null;
@@ -285,6 +321,20 @@ export interface ReportSummary {
   top_customers: { name: string; total: number }[];
 }
 export interface MonthStat { month: string; count: number; total: number; }
+
+// ── Company settings cache (shared across all pages) ─────────
+let _companyCache: CompanySettings | null = null;
+let _companyCacheTs = 0;
+const COMPANY_TTL = 5 * 60 * 1000; // 5 minutes
+
+function _companyValid() {
+  return _companyCache !== null && Date.now() - _companyCacheTs < COMPANY_TTL;
+}
+
+export function invalidateCompanyCache() {
+  _companyCache = null;
+  _companyCacheTs = 0;
+}
 
 // ── API ───────────────────────────────────────────────────────
 export const api = {
@@ -448,10 +498,38 @@ export const api = {
     request<PayrollRecord>(`/employees/payroll/${id}/status`, { method: "PATCH", body: { status } }),
   deletePayroll: (id: string) => request<void>(`/employees/payroll/${id}`, { method: "DELETE" }),
 
+  // Payroll v2 (comprehensive — /payroll prefix)
+  listPayrolls: (month?: string, payroll_status?: string, dept?: string) => {
+    const p = new URLSearchParams();
+    if (month)          p.set("month", month);
+    if (payroll_status) p.set("payroll_status", payroll_status);
+    if (dept)           p.set("dept", dept);
+    const qs = p.toString();
+    return request<Payroll[]>(`/payroll/${qs ? "?" + qs : ""}`);
+  },
+  createPayrollEntry: (body: unknown) => request<Payroll>("/payroll/", { method: "POST", body }),
+  getPayrollEntry: (id: string) => request<Payroll>(`/payroll/${id}`),
+  updatePayrollEntry: (id: string, body: unknown) => request<Payroll>(`/payroll/${id}`, { method: "PUT", body }),
+  deletePayrollEntry: (id: string) => request<void>(`/payroll/${id}`, { method: "DELETE" }),
+  patchPayrollStatus: (id: string, body: unknown) => request<Payroll>(`/payroll/${id}/status`, { method: "PATCH", body }),
+  getPayrollStats: (month: string) => request<PayrollStats>(`/payroll/stats?month=${month}`),
+  getPayrollLeaveSummary: (empId: string, month: string) =>
+    request<LeaveSummary>(`/payroll/leave-summary/${empId}?month=${month}`),
+
   // Settings
-  getCompanySettings: () => request<CompanySettings>("/settings/company"),
-  saveCompanySettings: (body: Partial<CompanySettings>) =>
-    request<CompanySettings>("/settings/company", { method: "PATCH", body }),
+  getCompanySettings: async () => {
+    if (_companyValid()) return _companyCache!;
+    const data = await request<CompanySettings>("/settings/company");
+    _companyCache = data;
+    _companyCacheTs = Date.now();
+    return data;
+  },
+  saveCompanySettings: async (body: Partial<CompanySettings>) => {
+    const data = await request<CompanySettings>("/settings/company", { method: "PATCH", body });
+    _companyCache = data;
+    _companyCacheTs = Date.now();
+    return data;
+  },
   getInvoiceSettings: () => request<InvoiceSettings>("/settings/invoice"),
   saveInvoiceSettings: (body: Partial<InvoiceSettings>) =>
     request<InvoiceSettings>("/settings/invoice", { method: "PATCH", body }),
