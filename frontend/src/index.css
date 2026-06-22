@@ -8,3 +8,30 @@ body {
   color: #1F1E1A;
   font-family: system-ui, sans-serif;
 }
+
+/* ── Print styles ─────────────────────────────────────────────── */
+@media print {
+  /* Hide everything */
+  body * { visibility: hidden !important; }
+
+  /* Show only the active print layout */
+  .print-selected,
+  .print-selected * { visibility: visible !important; }
+
+  /* Base positioning — size/padding overridden per layout via dynamic injection */
+  .print-selected {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* Always hide buttons, nav, labels */
+  .no-print { display: none !important; }
+
+  body { background: white !important; }
+}

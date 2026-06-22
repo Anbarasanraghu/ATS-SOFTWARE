@@ -13,6 +13,7 @@ import InventoryReportsPage from "./pages/InventoryReportsPage";
 import BarcodeLabelsPage from "./pages/BarcodeLabelsPage";
 import BillingPage from "./pages/BillingPage";
 import InvoiceDetailPage from "./pages/InvoiceDetailPage";
+import NewInvoicePage from "./pages/NewInvoicePage";
 import CustomersPage from "./pages/CustomersPage";
 import CustomerDetailPage from "./pages/CustomerDetailPage";
 import ReportsPage from "./pages/ReportsPage";
@@ -21,6 +22,7 @@ import LeaveRequestsPage from "./pages/LeaveRequestsPage";
 import PayrollPage from "./pages/PayrollPage";
 import TenantsPage from "./pages/admin/TenantsPage";
 import TenantDetailPage from "./pages/admin/TenantDetailPage";
+import SettingsPage from "./pages/SettingsPage";
 
 export default function App() {
   const { me, loading } = useAuth();
@@ -46,6 +48,7 @@ export default function App() {
         <Route path="/updates"        element={<UpdatesPage />} />
         <Route path="/products"       element={<ProductsPage />} />
         <Route path="/billing"        element={<BillingPage />} />
+        <Route path="/billing/new"    element={<NewInvoicePage />} />
         <Route path="/billing/:id"    element={<InvoiceDetailPage />} />
         <Route path="/customers"      element={<CustomersPage />} />
         <Route path="/customers/:id"  element={<CustomerDetailPage />} />
@@ -53,6 +56,7 @@ export default function App() {
         <Route path="/employees"      element={<EmployeesPage />} />
         <Route path="/leave-requests" element={<LeaveRequestsPage />} />
         <Route path="/payroll"        element={<PayrollPage />} />
+        <Route path="/settings"            element={<SettingsPage />} />
         <Route path="/admin/tenants"      element={<TenantsPage />} />
         <Route path="/admin/tenants/:id"  element={<TenantDetailPage />} />
         <Route path="*" element={<Navigate to="/billing" replace />} />

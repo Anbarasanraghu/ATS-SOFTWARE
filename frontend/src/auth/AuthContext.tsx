@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, getToken, setToken, type Me } from "../lib/api";
+import { api, getToken, setToken, invalidateCompanyCache, type Me } from "../lib/api";
 
 interface AuthState {
   me: Me | null;
@@ -22,6 +22,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       finally { setLoading(false); }
     }
     void load();
+
+    function onExpired() { setMe(null); setToken(null); }
+    window.addEventListener("auth:expired", onExpired);
+    return () => window.removeEventListener("auth:expired", onExpired);
   }, []);
 
   async function login(slug: string, email: string, password: string) {
@@ -33,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     setToken(null);
     setMe(null);
+    invalidateCompanyCache();
   }
 
   return (
