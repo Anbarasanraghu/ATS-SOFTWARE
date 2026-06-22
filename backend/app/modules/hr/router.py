@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.auth.deps import get_request_context
-from app.db.models import Department, Employee, LeaveRequest, PayrollRecord, Tenant
+from app.db.models import Department, Designation, Employee, LeaveRequest, PayrollRecord, Tenant
 from app.modules.custom_fields import validate_custom_fields
 from app.modules.hr import payroll_calc
 from app.modules.inventory.activity import log_activity
@@ -461,6 +461,52 @@ def _emp_out(e: Employee) -> EmployeeOut:
         created_at=e.created_at,
     )
 
+
+# ── Designations ─────────────────────────────────────────────
+# Must be defined before /{employee_id} to avoid route capture
+
+@router.get("/designations")
+async def list_designations(ctx=Depends(get_request_context)):
+    rows = (await ctx["session"].execute(
+        select(Designation).order_by(Designation.name)
+    )).scalars().all()
+    return [{"id": str(d.id), "name": d.name, "department_id": str(d.department_id) if d.department_id else None, "created_at": d.created_at} for d in rows]
+
+
+@router.post("/designations", status_code=201)
+async def create_designation(body: dict, ctx=Depends(get_request_context)):
+    session, user = ctx["session"], ctx["user"]
+    d = Designation(tenant_id=user.tenant_id, name=body["name"],
+                    department_id=body.get("department_id") or None)
+    session.add(d)
+    try:
+        await session.flush()
+    except IntegrityError:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"Designation '{body['name']}' already exists")
+    return {"id": str(d.id), "name": d.name, "department_id": str(d.department_id) if d.department_id else None, "created_at": d.created_at}
+
+
+@router.put("/designations/{desig_id}")
+async def update_designation(desig_id: str, body: dict, ctx=Depends(get_request_context)):
+    session = ctx["session"]
+    d = (await session.execute(select(Designation).where(Designation.id == desig_id))).scalar_one_or_none()
+    if not d:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Designation not found")
+    d.name = body.get("name", d.name)
+    d.department_id = body.get("department_id") or d.department_id
+    return {"id": str(d.id), "name": d.name, "department_id": str(d.department_id) if d.department_id else None, "created_at": d.created_at}
+
+
+@router.delete("/designations/{desig_id}", status_code=204)
+async def delete_designation(desig_id: str, ctx=Depends(get_request_context)):
+    session = ctx["session"]
+    d = (await session.execute(select(Designation).where(Designation.id == desig_id))).scalar_one_or_none()
+    if not d:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Designation not found")
+    await session.delete(d)
+
+
+# ── Employees ─────────────────────────────────────────────────
 
 @router.get("", response_model=list[EmployeeOut])
 async def list_employees(ctx=Depends(get_request_context)):

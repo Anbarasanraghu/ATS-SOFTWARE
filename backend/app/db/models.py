@@ -201,13 +201,27 @@ class Customer(Base):
     name: Mapped[str] = mapped_column(String)
     email: Mapped[str | None] = mapped_column(String)
     phone: Mapped[str | None] = mapped_column(String)
+    whatsapp: Mapped[str | None] = mapped_column(String)
     company: Mapped[str | None] = mapped_column(String)
     address: Mapped[str | None] = mapped_column(Text)
     notes: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String, default="active")
+    crm_status: Mapped[str] = mapped_column(String, default="new_lead")
+    priority: Mapped[str] = mapped_column(String, default="medium")
+    source: Mapped[str | None] = mapped_column(String)
+    interested_service: Mapped[str | None] = mapped_column(String)
+    requirement_details: Mapped[str | None] = mapped_column(Text)
+    assigned_staff: Mapped[str | None] = mapped_column(String)
+    first_followup_date: Mapped[date | None] = mapped_column(Date)
+    first_followup_time: Mapped[str | None] = mapped_column(String)
+    last_followup_date: Mapped[date | None] = mapped_column(Date)
+    next_followup_date: Mapped[date | None] = mapped_column(Date)
+    tags: Mapped[list] = mapped_column(JSONB, default=list)
+    payment_status: Mapped[str | None] = mapped_column(String)
     custom_fields: Mapped[dict] = mapped_column(JSONB, default=dict)
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Interaction(Base):
@@ -220,6 +234,39 @@ class Interaction(Base):
     body: Mapped[str] = mapped_column(Text)
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CustomerFollowup(Base):
+    __tablename__ = "customer_followups"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    customer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"))
+    followup_mode: Mapped[str] = mapped_column(String, default="call")
+    followup_status: Mapped[str] = mapped_column(String)
+    notes: Mapped[str | None] = mapped_column(Text)
+    next_followup_date: Mapped[date | None] = mapped_column(Date)
+    next_followup_time: Mapped[str | None] = mapped_column(String)
+    reminder_needed: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class CustomerPaymentFollowup(Base):
+    __tablename__ = "customer_payment_followups"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    customer_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("customers.id", ondelete="CASCADE"))
+    invoice_number: Mapped[str | None] = mapped_column(String)
+    invoice_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    paid_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    balance_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    payment_status: Mapped[str] = mapped_column(String, default="payment_pending")
+    payment_notes: Mapped[str | None] = mapped_column(Text)
+    next_payment_followup_date: Mapped[date | None] = mapped_column(Date)
+    reminder_needed: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 # ── Billing ──────────────────────────────────────────────────
@@ -272,6 +319,15 @@ class Payment(Base):
 
 
 # ── HR ───────────────────────────────────────────────────────
+
+class Designation(Base):
+    __tablename__ = "designations"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String)
+    department_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("departments.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
 
 class Department(Base):
     __tablename__ = "departments"
@@ -357,4 +413,153 @@ class PayrollRecord(Base):
     paid_on: Mapped[date | None] = mapped_column(Date)
     payment_method: Mapped[str | None] = mapped_column(String)
     payment_reference: Mapped[str | None] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# ── Settings ─────────────────────────────────────────────────
+
+class CompanySettings(Base):
+    __tablename__ = "company_settings"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), unique=True)
+    company_name: Mapped[str | None] = mapped_column(String(255))
+    company_logo: Mapped[str | None] = mapped_column(Text)
+    email:        Mapped[str | None] = mapped_column(String(255))
+    phone:        Mapped[str | None] = mapped_column(String(50))
+    address:      Mapped[str | None] = mapped_column(Text)
+    gst_number:   Mapped[str | None] = mapped_column(String(50))
+    website:      Mapped[str | None] = mapped_column(String(255))
+    upi_id:       Mapped[str | None] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class InvoiceSettings(Base):
+    __tablename__ = "invoice_settings"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), unique=True)
+    invoice_prefix:        Mapped[str | None] = mapped_column(String(20), default="INV")
+    next_invoice_number:   Mapped[int | None] = mapped_column(Integer, default=1)
+    default_tax_percent:   Mapped[float | None] = mapped_column(Numeric(5, 2), default=0)
+    default_payment_terms: Mapped[str | None] = mapped_column(String(100))
+    default_terms:         Mapped[str | None] = mapped_column(Text)
+    invoice_footer_note:   Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PrintSettings(Base):
+    __tablename__ = "print_settings"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), unique=True)
+    default_print_size: Mapped[str | None] = mapped_column(String(20), default="a4")
+    enable_a4_full: Mapped[bool] = mapped_column(Boolean, default=True)
+    enable_a4_half: Mapped[bool] = mapped_column(Boolean, default=True)
+    enable_33x55:   Mapped[bool] = mapped_column(Boolean, default=True)
+    show_logo:      Mapped[bool] = mapped_column(Boolean, default=True)
+    show_gst:       Mapped[bool] = mapped_column(Boolean, default=True)
+    show_terms:     Mapped[bool] = mapped_column(Boolean, default=True)
+    show_signature: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# ── Payroll (comprehensive) ───────────────────────────────────
+
+class Payroll(Base):
+    __tablename__ = "payrolls"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    employee_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("employees.id", ondelete="RESTRICT"))
+    payroll_month: Mapped[str] = mapped_column(String(7))
+
+    basic_salary: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    salary_type: Mapped[str] = mapped_column(String(20), default="monthly")
+
+    total_working_days: Mapped[int] = mapped_column(Integer, default=26)
+    present_days: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    absent_days: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    late_days: Mapped[int] = mapped_column(Integer, default=0)
+    early_leave_days: Mapped[int] = mapped_column(Integer, default=0)
+    total_worked_hours: Mapped[float] = mapped_column(Numeric(6, 2), default=0)
+    required_working_hours: Mapped[float] = mapped_column(Numeric(6, 2), default=0)
+
+    paid_leave_days: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    sick_leave_days: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    casual_leave_days: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    unpaid_leave_days: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    half_day_leave: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    remaining_leave_balance: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+
+    lop_days: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    per_day_salary: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    lop_deduction: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    lop_reason: Mapped[str | None] = mapped_column(Text)
+
+    normal_ot_hours: Mapped[float] = mapped_column(Numeric(6, 2), default=0)
+    night_ot_hours: Mapped[float] = mapped_column(Numeric(6, 2), default=0)
+    holiday_ot_hours: Mapped[float] = mapped_column(Numeric(6, 2), default=0)
+    per_hour_salary: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    normal_ot_multiplier: Mapped[float] = mapped_column(Numeric(4, 2), default=1.25)
+    night_ot_multiplier: Mapped[float] = mapped_column(Numeric(4, 2), default=1.50)
+    holiday_ot_multiplier: Mapped[float] = mapped_column(Numeric(4, 2), default=2.00)
+    total_ot_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+
+    total_allowances: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    total_deductions: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    gross_salary: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    net_salary: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+
+    payroll_status: Mapped[str] = mapped_column(String(30), default="draft")
+    payment_status: Mapped[str] = mapped_column(String(20), default="unpaid")
+    payment_date: Mapped[date | None] = mapped_column(Date)
+    payment_method: Mapped[str | None] = mapped_column(String(30))
+    transaction_id: Mapped[str | None] = mapped_column(String(100))
+    payment_notes: Mapped[str | None] = mapped_column(Text)
+
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PayrollAllowance(Base):
+    __tablename__ = "payroll_allowances"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    payroll_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("payrolls.id", ondelete="CASCADE"))
+    allowance_name: Mapped[str] = mapped_column(String(100))
+    amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PayrollDeduction(Base):
+    __tablename__ = "payroll_deductions"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    payroll_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("payrolls.id", ondelete="CASCADE"))
+    deduction_name: Mapped[str] = mapped_column(String(100))
+    amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SalaryAdvance(Base):
+    __tablename__ = "salary_advances"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    employee_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("employees.id", ondelete="CASCADE"))
+    advance_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    deduction_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    remaining_amount: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    advance_date: Mapped[date] = mapped_column(Date)
+    status: Mapped[str] = mapped_column(String(20), default="active")
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class PayrollActivityLog(Base):
+    __tablename__ = "payroll_activity_logs"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    payroll_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("payrolls.id", ondelete="CASCADE"))
+    activity_type: Mapped[str] = mapped_column(String(50))
+    description: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
