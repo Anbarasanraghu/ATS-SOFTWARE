@@ -92,6 +92,7 @@ class Product(Base):
     supplier_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("suppliers.id", ondelete="SET NULL"))
     sku: Mapped[str | None] = mapped_column(String)
     barcode: Mapped[str | None] = mapped_column(String)
+    barcode_type: Mapped[str | None] = mapped_column(String)
     name: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text)
     unit: Mapped[str] = mapped_column(String, default="pcs")
@@ -106,6 +107,32 @@ class Product(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class ProductBarcode(Base):
+    __tablename__ = "product_barcodes"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    product_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"))
+    barcode: Mapped[str] = mapped_column(String)
+    barcode_type: Mapped[str] = mapped_column(String, default="CODE128")
+    kind: Mapped[str] = mapped_column(String, default="alternate")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ProductBatch(Base):
+    __tablename__ = "product_batches"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    product_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"))
+    batch_no: Mapped[str | None] = mapped_column(String)
+    mfg_date: Mapped[date | None] = mapped_column(Date)
+    expiry_date: Mapped[date | None] = mapped_column(Date)
+    quantity: Mapped[float] = mapped_column(Numeric(14, 3), default=0)
+    mrp: Mapped[float | None] = mapped_column(Numeric(14, 2))
+    manufacturer: Mapped[str | None] = mapped_column(String)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class StockMovement(Base):
     __tablename__ = "stock_movements"
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
@@ -116,6 +143,51 @@ class StockMovement(Base):
     unit_cost: Mapped[float | None] = mapped_column(Numeric(14, 2))
     reference: Mapped[str | None] = mapped_column(String)
     notes: Mapped[str | None] = mapped_column(Text)
+    doc_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("inventory_docs.id", ondelete="CASCADE"))
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class InventoryDoc(Base):
+    __tablename__ = "inventory_docs"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    doc_type: Mapped[str] = mapped_column(String)
+    doc_number: Mapped[str | None] = mapped_column(String)
+    party_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    party_name: Mapped[str | None] = mapped_column(String)
+    doc_date: Mapped[date] = mapped_column(Date, server_default=func.current_date())
+    status: Mapped[str] = mapped_column(String, default="posted")
+    subtotal: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    tax_total: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    total: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class InventoryDocItem(Base):
+    __tablename__ = "inventory_doc_items"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    doc_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("inventory_docs.id", ondelete="CASCADE"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    product_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="SET NULL"))
+    description: Mapped[str] = mapped_column(String)
+    quantity: Mapped[float] = mapped_column(Numeric(14, 3), default=1)
+    unit_price: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    tax_percent: Mapped[float] = mapped_column(Numeric(5, 2), default=0)
+    line_total: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+
+
+class ActivityLog(Base):
+    __tablename__ = "activity_log"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    entity: Mapped[str] = mapped_column(String)
+    entity_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    entity_name: Mapped[str | None] = mapped_column(String)
+    action: Mapped[str] = mapped_column(String)
+    detail: Mapped[dict] = mapped_column(JSONB, default=dict)
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -228,6 +300,16 @@ class Employee(Base):
     annual_leave_balance: Mapped[float] = mapped_column(Numeric(5, 1), default=0)
     notes: Mapped[str | None] = mapped_column(Text)
     custom_fields: Mapped[dict] = mapped_column(JSONB, default=dict)
+    # Statutory + bank + default salary structure
+    pan: Mapped[str | None] = mapped_column(String)
+    aadhaar: Mapped[str | None] = mapped_column(String)
+    uan: Mapped[str | None] = mapped_column(String)
+    pf_number: Mapped[str | None] = mapped_column(String)
+    esi_number: Mapped[str | None] = mapped_column(String)
+    bank_account: Mapped[str | None] = mapped_column(String)
+    bank_ifsc: Mapped[str | None] = mapped_column(String)
+    bank_name: Mapped[str | None] = mapped_column(String)
+    salary_structure: Mapped[dict] = mapped_column(JSONB, default=dict)
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
@@ -261,4 +343,18 @@ class PayrollRecord(Base):
     net_salary: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
     status: Mapped[str] = mapped_column(String, default="draft")
     notes: Mapped[str | None] = mapped_column(Text)
+    # Itemised breakdown + statutory + employer share + LOP + payment
+    earnings: Mapped[dict] = mapped_column(JSONB, default=dict)
+    deductions_detail: Mapped[dict] = mapped_column(JSONB, default=dict)
+    gross_earnings: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    total_deductions: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    employer_pf: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    employer_esi: Mapped[float] = mapped_column(Numeric(14, 2), default=0)
+    working_days: Mapped[float | None] = mapped_column(Numeric(5, 1))
+    paid_days: Mapped[float | None] = mapped_column(Numeric(5, 1))
+    lop_days: Mapped[float] = mapped_column(Numeric(5, 1), default=0)
+    approved_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    paid_on: Mapped[date | None] = mapped_column(Date)
+    payment_method: Mapped[str | None] = mapped_column(String)
+    payment_reference: Mapped[str | None] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

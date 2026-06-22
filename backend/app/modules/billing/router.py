@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 
 from app.auth.deps import get_request_context
-from app.db.models import Invoice, InvoiceItem, Payment
+from app.db.models import Invoice, InvoiceItem, Payment, Product, StockMovement
 from app.modules.billing.schemas import (
     InvoiceIn, InvoiceItemOut, InvoiceOut,
     PaymentIn, PaymentOut, StatusIn,
 )
+from app.modules.inventory.activity import log_activity
+from app.modules.pharmacy.expiry import consume_batches_fefo
 
 router = APIRouter()
 
@@ -114,6 +116,13 @@ async def create_invoice(body: InvoiceIn, ctx=Depends(get_request_context)):
     session.add(inv)
     await session.flush()
 
+    # Pre-load products referenced by the line items for stock deduction.
+    product_ids = [i.product_id for i in body.items if i.product_id]
+    products: dict[str, Product] = {}
+    if product_ids:
+        rows = (await session.execute(select(Product).where(Product.id.in_(product_ids)))).scalars().all()
+        products = {str(p.id): p for p in rows}
+
     saved_items: list[InvoiceItem] = []
     for item_data in body.items:
         item = InvoiceItem(
@@ -129,7 +138,25 @@ async def create_invoice(body: InvoiceIn, ctx=Depends(get_request_context)):
         session.add(item)
         saved_items.append(item)
 
+        # A sale reduces stock: decrement the product and record a stock movement
+        # so the change shows in Inventory, the POS list, barcode labels and reports.
+        p = products.get(item_data.product_id) if item_data.product_id else None
+        if p:
+            p.stock_qty = float(p.stock_qty) - float(item_data.quantity)
+            await consume_batches_fefo(session, p.id, float(item_data.quantity))
+            session.add(StockMovement(
+                tenant_id=user.tenant_id, product_id=p.id, movement_type="out",
+                quantity=item_data.quantity, reference=invoice_number,
+                notes="Sale (invoice/POS)", created_by=user.id,
+            ))
+
     await session.flush()
+    if products:
+        await log_activity(
+            session, user, entity="sale", action="create",
+            entity_id=inv.id, entity_name=invoice_number,
+            detail={"total": float(inv.total), "items": len(saved_items)},
+        )
     return _inv_out(inv, saved_items, [])
 
 
@@ -203,4 +230,21 @@ async def delete_invoice(invoice_id: str, ctx=Depends(get_request_context)):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Invoice not found")
     if inv.status != "draft":
         raise HTTPException(status.HTTP_409_CONFLICT, "Only draft invoices can be deleted")
+
+    # Put the sold stock back, then remove the movements this invoice created.
+    items = (await session.execute(
+        select(InvoiceItem).where(InvoiceItem.invoice_id == inv.id)
+    )).scalars().all()
+    for it in items:
+        if not it.product_id:
+            continue
+        p = (await session.execute(select(Product).where(Product.id == it.product_id))).scalar_one_or_none()
+        if p:
+            p.stock_qty = float(p.stock_qty) + float(it.quantity)
+    await session.execute(
+        delete(StockMovement).where(
+            StockMovement.reference == inv.invoice_number,
+            StockMovement.movement_type == "out",
+        )
+    )
     await session.delete(inv)

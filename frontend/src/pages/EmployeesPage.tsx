@@ -2,17 +2,27 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import { api, type Department, type Employee, type FieldDef } from "../lib/api";
 import DynamicFields from "../components/DynamicFields";
+import { money } from "../lib/money";
+
+const SALARY_COMPONENTS: [string, string][] = [
+  ["basic","Basic"],["hra","HRA"],["da","DA"],["conveyance","Conveyance"],["medical","Medical"],["special","Special"],
+];
 
 type Form = {
   employee_no: string; full_name: string; email: string; phone: string;
   department_id: string; department: string; job_title: string; hire_date: string;
   status: string; salary: string; annual_leave_balance: string; notes: string;
   custom: Record<string, unknown>;
+  pan: string; aadhaar: string; uan: string; pf_number: string; esi_number: string;
+  bank_account: string; bank_ifsc: string; bank_name: string;
+  salary_structure: Record<string, string>;
 };
 const blank = (): Form => ({
   employee_no: "", full_name: "", email: "", phone: "",
   department_id: "", department: "", job_title: "", hire_date: "",
   status: "active", salary: "", annual_leave_balance: "0", notes: "", custom: {},
+  pan: "", aadhaar: "", uan: "", pf_number: "", esi_number: "",
+  bank_account: "", bank_ifsc: "", bank_name: "", salary_structure: {},
 });
 
 const STATUS_CLS: Record<string, string> = {
@@ -54,6 +64,12 @@ export default function EmployeesPage() {
       status: e.status, salary: e.salary !== null ? String(e.salary) : "",
       annual_leave_balance: String(e.annual_leave_balance), notes: e.notes ?? "",
       custom: { ...e.custom_fields },
+      pan: e.pan ?? "", aadhaar: e.aadhaar ?? "", uan: e.uan ?? "",
+      pf_number: e.pf_number ?? "", esi_number: e.esi_number ?? "",
+      bank_account: e.bank_account ?? "", bank_ifsc: e.bank_ifsc ?? "", bank_name: e.bank_name ?? "",
+      salary_structure: e.salary_structure
+        ? Object.fromEntries(Object.entries(e.salary_structure).map(([k, v]) => [k, String(v)]))
+        : {},
     });
     setError(null);
   }
@@ -69,6 +85,12 @@ export default function EmployeesPage() {
       salary: f.salary !== "" ? Number(f.salary) : null,
       annual_leave_balance: Number(f.annual_leave_balance),
       notes: f.notes || null, custom_fields: f.custom,
+      pan: f.pan || null, aadhaar: f.aadhaar || null, uan: f.uan || null,
+      pf_number: f.pf_number || null, esi_number: f.esi_number || null,
+      bank_account: f.bank_account || null, bank_ifsc: f.bank_ifsc || null, bank_name: f.bank_name || null,
+      salary_structure: Object.fromEntries(
+        Object.entries(f.salary_structure).filter(([, v]) => v !== "" && Number(v)).map(([k, v]) => [k, Number(v)]),
+      ),
     };
   }
 
@@ -149,6 +171,32 @@ export default function EmployeesPage() {
           <label className="block col-span-2"><span className="text-xs font-medium uppercase tracking-wide text-muted">Notes</span>
             <textarea rows={2} className={`${inputCls} resize-none`} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
         </div>
+
+        {/* Salary structure (used to auto-fill payroll) */}
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted mb-1">Monthly salary structure</div>
+          <div className="grid grid-cols-3 gap-2">
+            {SALARY_COMPONENTS.map(([k, label]) => (
+              <label key={k} className="block"><span className="text-[11px] text-muted">{label}</span>
+                <input type="number" step="0.01" className="w-full rounded-md border border-line bg-paper px-2 py-1 text-sm outline-none focus:border-accent"
+                  value={form.salary_structure[k] ?? ""}
+                  onChange={(e) => setForm({ ...form, salary_structure: { ...form.salary_structure, [k]: e.target.value } })} /></label>
+            ))}
+          </div>
+        </div>
+
+        {/* Statutory & bank */}
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-muted mb-1">Statutory &amp; bank</div>
+          <div className="grid grid-cols-3 gap-2">
+            {([["pan","PAN"],["aadhaar","Aadhaar"],["uan","UAN"],["pf_number","PF No."],["esi_number","ESI No."],["bank_name","Bank"],["bank_account","Account No."],["bank_ifsc","IFSC"]] as [keyof Form, string][]).map(([k, label]) => (
+              <label key={k} className="block"><span className="text-[11px] text-muted">{label}</span>
+                <input className="w-full rounded-md border border-line bg-paper px-2 py-1 text-sm outline-none focus:border-accent"
+                  value={form[k] as string} onChange={(e) => setForm({ ...form, [k]: e.target.value })} /></label>
+            ))}
+          </div>
+        </div>
+
         <DynamicFields defs={defs} values={form.custom}
           onChange={(k, v) => setForm((f) => ({ ...f, custom: { ...f.custom, [k]: v } }))} />
         {error && <p className="text-sm text-danger">{error}</p>}
@@ -228,7 +276,7 @@ export default function EmployeesPage() {
                   <td className="px-4 py-3 text-muted">{e.department ?? "—"}</td>
                   <td className="px-4 py-3 text-muted">{e.job_title ?? "—"}</td>
                   <td className="px-4 py-3 text-muted">{e.hire_date ?? "—"}</td>
-                  <td className="px-4 py-3 text-right font-mono">{e.salary !== null ? Number(e.salary).toLocaleString() : "—"}</td>
+                  <td className="px-4 py-3 text-right font-mono">{e.salary !== null ? money(e.salary) : "—"}</td>
                   <td className="px-4 py-3 text-center text-xs font-semibold">{e.annual_leave_balance}d</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLS[e.status] ?? ""}`}>

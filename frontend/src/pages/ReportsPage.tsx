@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { BarChart3, DollarSign, FileText, Users, Boxes, TrendingUp } from "lucide-react";
+import { BarChart3, IndianRupee, FileText, Users, Boxes, TrendingUp } from "lucide-react";
 import { api, type MonthStat, type ReportSummary } from "../lib/api";
+import { money } from "../lib/money";
 
 const STATUS_CLS: Record<string, string> = {
   draft: "bg-zinc-100 text-zinc-600",
@@ -74,14 +75,14 @@ export default function ReportsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           label="Total Revenue"
-          value={`$${Number(summary.revenue).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={money(summary.revenue)}
           sub="from paid invoices"
-          icon={DollarSign}
+          icon={IndianRupee}
           color="bg-emerald-100 text-emerald-700"
         />
         <KpiCard
           label="Outstanding"
-          value={`$${Number(summary.outstanding).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          value={money(summary.outstanding)}
           sub="draft + sent invoices"
           icon={TrendingUp}
           color="bg-sky-100 text-sky-700"
@@ -137,7 +138,7 @@ export default function ReportsPage() {
                     <span className="w-4 text-xs text-muted font-mono">{i + 1}</span>
                     <span className="flex-1 truncate font-medium">{tc.name}</span>
                     <span className="font-mono text-xs text-muted w-24 text-right">
-                      ${Number(tc.total).toFixed(2)}
+                      {money(tc.total)}
                     </span>
                     <div className="w-20 h-2 rounded-full bg-line overflow-hidden">
                       <div
@@ -175,7 +176,7 @@ export default function ReportsPage() {
                   <td className="px-4 py-3 font-mono text-xs text-muted">{inv.invoice_number}</td>
                   <td className="px-4 py-3 font-medium">{inv.customer_name}</td>
                   <td className="px-4 py-3 text-muted">{inv.issue_date ?? "—"}</td>
-                  <td className="px-4 py-3 text-right font-mono">{Number(inv.total).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{money(inv.total)}</td>
                   <td className="px-4 py-3">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLS[inv.status] ?? ""}`}>
                       {inv.status}

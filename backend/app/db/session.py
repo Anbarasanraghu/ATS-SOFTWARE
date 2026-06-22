@@ -5,13 +5,25 @@ from app.core.config import settings
 
 engine = create_async_engine(
     settings.database_url,
-    pool_pre_ping=True,
+    # No pool_pre_ping: it adds a round trip (SELECT 1) before every request,
+    # which is costly against a remote DB. Recycle connections instead.
+    # Pool kept small: Supabase's session pooler caps total client connections
+    # (~15), shared with the admin engine below.
+    pool_recycle=1800,
+    pool_size=5,
+    max_overflow=3,
+    pool_timeout=20,
     connect_args={"statement_cache_size": 0},
 )
 SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 admin_engine = create_async_engine(
-    settings.admin_database_url or settings.database_url, pool_pre_ping=True
+    settings.admin_database_url or settings.database_url,
+    pool_recycle=1800,
+    pool_size=2,
+    max_overflow=2,
+    pool_timeout=20,
+    connect_args={"statement_cache_size": 0},
 )
 AdminSessionLocal = async_sessionmaker(admin_engine, class_=AsyncSession, expire_on_commit=False)
 

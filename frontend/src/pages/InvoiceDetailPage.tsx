@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2, X } from "lucide-react";
 import { api, type Invoice } from "../lib/api";
+import { money } from "../lib/money";
 
 const STATUS_CLS: Record<string, string> = {
   draft: "bg-zinc-100 text-zinc-600",
@@ -134,9 +135,9 @@ export default function InvoiceDetailPage() {
                     <tr key={item.id} className="border-b border-line/60 last:border-0">
                       <td className="px-4 py-3">{item.description}</td>
                       <td className="px-4 py-3 text-right">{item.quantity}</td>
-                      <td className="px-4 py-3 text-right font-mono">{Number(item.unit_price).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-mono">{money(item.unit_price)}</td>
                       <td className="px-4 py-3 text-right">{item.tax_percent}%</td>
-                      <td className="px-4 py-3 text-right font-mono">{Number(item.line_total).toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right font-mono">{money(item.line_total)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -148,12 +149,12 @@ export default function InvoiceDetailPage() {
         {/* Totals */}
         <div className="flex justify-end">
           <div className="w-56 space-y-1 text-sm">
-            <div className="flex justify-between text-muted"><span>Subtotal</span><span>{Number(invoice.subtotal).toFixed(2)}</span></div>
-            <div className="flex justify-between text-muted"><span>Tax</span><span>{Number(invoice.tax_total).toFixed(2)}</span></div>
-            <div className="flex justify-between font-semibold border-t border-line pt-1 text-base"><span>Total</span><span>{Number(invoice.total).toFixed(2)}</span></div>
-            <div className="flex justify-between text-emerald-700"><span>Paid</span><span>{Number(invoice.amount_paid).toFixed(2)}</span></div>
+            <div className="flex justify-between text-muted"><span>Subtotal</span><span>{money(invoice.subtotal)}</span></div>
+            <div className="flex justify-between text-muted"><span>Tax</span><span>{money(invoice.tax_total)}</span></div>
+            <div className="flex justify-between font-semibold border-t border-line pt-1 text-base"><span>Total</span><span>{money(invoice.total)}</span></div>
+            <div className="flex justify-between text-emerald-700"><span>Paid</span><span>{money(invoice.amount_paid)}</span></div>
             <div className="flex justify-between font-bold text-base border-t border-line pt-1">
-              <span>Balance Due</span><span className={invoice.balance_due > 0 ? "text-danger" : "text-emerald-700"}>{Number(invoice.balance_due).toFixed(2)}</span>
+              <span>Balance Due</span><span className={invoice.balance_due > 0 ? "text-danger" : "text-emerald-700"}>{money(invoice.balance_due)}</span>
             </div>
           </div>
         </div>
@@ -177,7 +178,7 @@ export default function InvoiceDetailPage() {
                 {invoice.payments.map((p) => (
                   <div key={p.id} className="flex items-center justify-between px-4 py-3 text-sm">
                     <div>
-                      <span className="font-mono font-semibold">{Number(p.amount).toFixed(2)}</span>
+                      <span className="font-mono font-semibold">{money(p.amount)}</span>
                       <span className="text-muted ml-2">{p.method.replace("_", " ")}</span>
                       {p.reference && <span className="text-muted ml-2">· {p.reference}</span>}
                     </div>
