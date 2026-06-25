@@ -3,22 +3,22 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.core.config import settings
 
-# We talk to Supabase's connection POOLER (Supavisor), not Postgres directly, so
-# the old "15 server connections" cap doesn't apply to the client pool — Supavisor
-# multiplexes hundreds of client connections onto a few server ones. A small pool
-# was actually the bottleneck: each page fires several API calls in parallel, and
-# with only 2 warm connections the rest serialized or re-established cold
-# connections (~380ms each to Sydney). A roomy pool keeps connections warm and lets
-# a page's requests run concurrently (measured ~3x faster page loads).
+# We talk to Supabase's connection POOLER (Supavisor), not Postgres directly. A
+# roomy-ish pool lets each page's parallel API calls run concurrently instead of
+# serializing (the old pool_size=2 was the main slowness). BUT the pooler drops
+# idle connections, so pool_pre_ping=True is REQUIRED — without it, SQLAlchemy
+# hands out a dead connection and the request fails with "connection is closed".
+# pool_recycle keeps connections younger than the pooler's idle timeout so the
+# pre-ping rarely has to actually reconnect.
 # statement_cache_size=0 is required for PgBouncer transaction mode (port 6543).
 # timeout=60 prevents indefinite hangs on first SSL handshake via asyncpg.
 engine = create_async_engine(
     settings.database_url,
-    pool_size=10,
-    max_overflow=5,
+    pool_size=5,
+    max_overflow=10,
     pool_timeout=30,
-    pool_recycle=1800,
-    pool_pre_ping=False,   # avoid an extra SELECT 1 round trip per checkout
+    pool_recycle=300,
+    pool_pre_ping=True,
     echo=False,
     connect_args={
         "statement_cache_size": 0,
@@ -30,10 +30,11 @@ SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=
 
 admin_engine = create_async_engine(
     settings.admin_database_url or settings.database_url,
-    pool_size=3,
-    max_overflow=2,
+    pool_size=2,
+    max_overflow=3,
     pool_timeout=30,
-    pool_recycle=1800,
+    pool_recycle=300,
+    pool_pre_ping=True,
     connect_args={"statement_cache_size": 0, "timeout": 60},
 )
 AdminSessionLocal = async_sessionmaker(admin_engine, class_=AsyncSession, expire_on_commit=False)

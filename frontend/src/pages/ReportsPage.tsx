@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BarChart3, IndianRupee, FileText, Users, Boxes, TrendingUp } from "lucide-react";
 import { api, type MonthStat, type ReportSummary } from "../lib/api";
 import { money } from "../lib/money";
@@ -10,12 +11,16 @@ const STATUS_CLS: Record<string, string> = {
   void: "bg-red-100 text-red-600",
 };
 
-function KpiCard({ label, value, sub, icon: Icon, color }: {
+function KpiCard({ label, value, sub, icon: Icon, color, onClick }: {
   label: string; value: string; sub?: string;
-  icon: React.ElementType; color: string;
+  icon: React.ElementType; color: string; onClick?: () => void;
 }) {
   return (
-    <div className="bg-surface border border-line rounded-lg p-5 flex items-start gap-4">
+    <button
+      onClick={onClick}
+      className={`text-left w-full bg-surface border border-line rounded-lg p-5 flex items-start gap-4 transition-all
+        ${onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-line/80" : "cursor-default"}`}
+    >
       <div className={`rounded-lg p-2.5 ${color}`}>
         <Icon size={20} />
       </div>
@@ -24,7 +29,7 @@ function KpiCard({ label, value, sub, icon: Icon, color }: {
         <div className="text-xs text-muted uppercase tracking-wide mt-0.5">{label}</div>
         {sub && <div className="text-xs text-muted mt-1">{sub}</div>}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -51,6 +56,7 @@ export default function ReportsPage() {
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [monthData, setMonthData] = useState<MonthStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     void (async () => {
@@ -79,6 +85,7 @@ export default function ReportsPage() {
           sub="from paid invoices"
           icon={IndianRupee}
           color="bg-emerald-100 text-emerald-700"
+          onClick={() => navigate("/billing")}
         />
         <KpiCard
           label="Outstanding"
@@ -86,31 +93,35 @@ export default function ReportsPage() {
           sub="draft + sent invoices"
           icon={TrendingUp}
           color="bg-sky-100 text-sky-700"
+          onClick={() => navigate("/billing")}
         />
         <KpiCard
           label="Customers"
           value={String(summary.customer_count)}
           icon={Users}
           color="bg-violet-100 text-violet-700"
+          onClick={() => navigate("/customers")}
         />
         <KpiCard
           label="Products"
           value={String(summary.product_count)}
           icon={Boxes}
           color="bg-amber-100 text-amber-700"
+          onClick={() => navigate("/products")}
         />
       </div>
 
       {/* Invoice breakdown */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {(["draft", "sent", "paid", "void"] as const).map((s) => (
-          <div key={s} className="bg-surface border border-line rounded-lg p-4 flex items-center gap-3">
+          <button key={s} onClick={() => navigate("/billing")}
+            className="text-left w-full bg-surface border border-line rounded-lg p-4 flex items-center gap-3 transition-all cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-line/80">
             <FileText size={18} className="text-muted" />
             <div>
               <div className="text-lg font-bold">{summary.invoices[s]}</div>
               <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLS[s]}`}>{s}</span>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 

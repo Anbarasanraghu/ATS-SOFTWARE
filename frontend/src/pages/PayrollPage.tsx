@@ -198,19 +198,25 @@ function FRow({ label, children }: { label: string; children: React.ReactNode })
 
 // ── Stats Card ────────────────────────────────────────────────
 
-function StatCard({ label, value, sub, icon: Icon, color }: {
+function StatCard({ label, value, sub, icon: Icon, color, active, onClick }: {
   label: string; value: string; sub?: string;
   icon: React.ElementType; color: string;
+  active?: boolean; onClick?: () => void;
 }) {
   return (
-    <div className="bg-surface border border-line rounded-xl p-4 flex items-start gap-3">
+    <button
+      onClick={onClick}
+      className={`text-left bg-surface border rounded-xl p-4 flex items-start gap-3 transition-all w-full
+        ${onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5" : "cursor-default"}
+        ${active ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}
+    >
       <div className={`rounded-lg p-2.5 flex-shrink-0 ${color}`}><Icon size={18} /></div>
       <div className="min-w-0">
         <div className="text-lg font-bold text-ink truncate">{value}</div>
         <div className="text-xs text-muted uppercase tracking-wide">{label}</div>
         {sub && <div className="text-xs text-muted mt-0.5">{sub}</div>}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -1000,13 +1006,6 @@ export default function PayrollPage() {
       await refresh();
     } catch(err) { alert(err instanceof Error ? err.message : "Failed"); }
   }
-  async function submitPay(e: { preventDefault(): void }) {
-    e.preventDefault(); if (!payFor) return;
-    try {
-      await api.updatePayrollStatus(payFor.id, { status: "paid", ...payForm });
-      setPayFor(null); await refresh();
-    } catch (err) { alert(err instanceof Error ? err.message : "Failed"); }
-  }
   async function remove(id: string) {
     if (!confirm("Delete this payroll record?")) return;
     try { await api.deletePayrollEntry(id); await refresh(); }
@@ -1045,7 +1044,7 @@ export default function PayrollPage() {
         </div>
         <button onClick={() => { setEditPayroll(null); setShowCalc(true); }}
           className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/90">
-          <Plus size={16}/> Generate Payroll
+          <Plus size={16}/> Add Payroll
         </button>
       </div>
 
@@ -1076,13 +1075,16 @@ export default function PayrollPage() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatCard label="Total Employees" value={String(stats?.total_employees ?? 0)}
-          sub={monthLabel(selMonth)} icon={Users} color="bg-blue-100 text-blue-700"/>
+          sub={monthLabel(selMonth)} icon={Users} color="bg-blue-100 text-blue-700"
+          active={selStatus === ""} onClick={() => setSelStatus("")}/>
         <StatCard label="Total Payroll" value={stats ? `₹${fmtN(stats.total_payroll)}` : "—"}
           icon={DollarSign} color="bg-emerald-100 text-emerald-700"/>
         <StatCard label="Paid Employees" value={String(stats?.paid_count ?? 0)}
-          icon={CheckCircle} color="bg-green-100 text-green-700"/>
+          icon={CheckCircle} color="bg-green-100 text-green-700"
+          active={selStatus === "paid"} onClick={() => setSelStatus("paid")}/>
         <StatCard label="Pending Payments" value={String(stats?.pending_count ?? 0)}
-          icon={Clock} color="bg-amber-100 text-amber-700"/>
+          icon={Clock} color="bg-amber-100 text-amber-700"
+          active={selStatus === "pending_approval"} onClick={() => setSelStatus("pending_approval")}/>
         <StatCard label="Total Deductions" value={stats ? `₹${fmtN(stats.total_deductions)}` : "—"}
           icon={AlertCircle} color="bg-red-100 text-red-600"/>
         <StatCard label="Overtime Amount" value={stats ? `₹${fmtN(stats.total_ot_amount)}` : "—"}
@@ -1103,9 +1105,9 @@ export default function PayrollPage() {
           <div className="p-10 text-center text-muted text-sm">
             <BarChart2 size={32} className="mx-auto mb-2 opacity-30"/>
             <p>No payroll records for {monthLabel(selMonth)}.</p>
-            <button onClick={() => setShowCalc(true)}
+            <button onClick={() => { setEditPayroll(null); setShowCalc(true); }}
               className="mt-3 px-4 py-2 bg-accent text-white rounded-lg text-xs font-medium">
-              Generate First Payroll
+              <Plus size={14} className="inline -mt-0.5 mr-1"/> Add First Payroll
             </button>
           </div>
         ) : (
@@ -1197,7 +1199,7 @@ export default function PayrollPage() {
                         </button>
                         {/* Delete */}
                         {p.payroll_status !== "paid" && (
-                          <button onClick={() => handleDelete(p.id)} title="Delete"
+                          <button onClick={() => remove(p.id)} title="Delete"
                             className="p-1.5 rounded hover:bg-line text-muted hover:text-danger">
                             <Trash2 size={14}/>
                           </button>

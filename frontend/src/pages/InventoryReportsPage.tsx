@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { api, type InventorySummary, type PeriodStat } from "../lib/api";
 import { money } from "../lib/money";
 
-function Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Card({ label, value, sub, onClick }: { label: string; value: string; sub?: string; onClick?: () => void }) {
   return (
-    <div className="bg-surface border border-line rounded-lg p-4">
+    <button
+      onClick={onClick}
+      className={`text-left w-full bg-surface border border-line rounded-lg p-4 transition-all
+        ${onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-line/80" : "cursor-default"}`}
+    >
       <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
       <div className="text-2xl font-semibold mt-1">{value}</div>
       {sub && <div className="text-xs text-muted mt-1">{sub}</div>}
-    </div>
+    </button>
   );
 }
 
@@ -17,6 +22,7 @@ export default function InventoryReportsPage() {
   const [summary, setSummary] = useState<InventorySummary | null>(null);
   const [period, setPeriod]   = useState<"daily" | "monthly">("daily");
   const [stats, setStats]     = useState<PeriodStat[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => { void api.inventorySummary().then(setSummary); }, []);
   useEffect(() => { void api.inventoryByPeriod(period).then(setStats); }, [period]);
@@ -30,14 +36,14 @@ export default function InventoryReportsPage() {
       {summary && (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card label="Items" value={String(summary.item_count)} sub={`${summary.total_stock_units} units on hand`} />
-            <Card label="Stock Value (cost)" value={money(summary.stock_value_cost)} sub={`Retail ${money(summary.stock_value_retail)}`} />
-            <Card label="Low Stock" value={String(summary.low_stock_count)} sub="at or below reorder level" />
+            <Card label="Items" value={String(summary.item_count)} sub={`${summary.total_stock_units} units on hand`} onClick={() => navigate("/inventory")} />
+            <Card label="Stock Value (cost)" value={money(summary.stock_value_cost)} sub={`Retail ${money(summary.stock_value_retail)}`} onClick={() => navigate("/inventory")} />
+            <Card label="Low Stock" value={String(summary.low_stock_count)} sub="at or below reorder level" onClick={() => navigate("/inventory")} />
             <Card label="Today" value={`${money(summary.sales_today)}`} sub={`Sales · Purchases ${money(summary.purchases_today)}`} />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card label="Total Purchases" value={money(summary.purchases_total)} />
-            <Card label="Total Sales" value={money(summary.sales_total)} />
+            <Card label="Total Purchases" value={money(summary.purchases_total)} onClick={() => navigate("/purchases")} />
+            <Card label="Total Sales" value={money(summary.sales_total)} onClick={() => navigate("/sales")} />
             <Card label="Gross Margin" value={money(summary.sales_total - summary.purchases_total)} sub="sales − purchases" />
             <Card label="Retail − Cost" value={money(summary.stock_value_retail - summary.stock_value_cost)} sub="potential margin in stock" />
           </div>

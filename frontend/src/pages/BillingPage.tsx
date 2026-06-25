@@ -242,24 +242,27 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {/* ── Dashboard Stats ── */}
+      {/* ── Dashboard Stats (click a card to filter the list) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div className="bg-surface border border-line rounded-xl p-4">
+        <button onClick={() => { setStatusFilter("all"); setPayFilter("all"); }}
+          className={`text-left rounded-xl p-4 border transition-all w-full cursor-pointer hover:shadow-md hover:-translate-y-0.5 bg-surface ${statusFilter === "all" && payFilter === "all" ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}>
           <p className="text-xs text-muted mb-1">Total Invoices</p>
           <p className="text-2xl font-bold text-ink">{stats.total}</p>
-        </div>
-        <div className="bg-surface border border-line rounded-xl p-4">
+        </button>
+        <button onClick={() => setStatusFilter("paid")}
+          className={`text-left rounded-xl p-4 border transition-all w-full cursor-pointer hover:shadow-md hover:-translate-y-0.5 bg-surface ${statusFilter === "paid" ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}>
           <p className="text-xs text-muted mb-1">Paid Invoices</p>
           <p className="text-2xl font-bold text-emerald-600">{stats.paid}</p>
-        </div>
+        </button>
         <div className="bg-surface border border-line rounded-xl p-4">
           <p className="text-xs text-muted mb-1">Pending Amount</p>
           <p className="text-2xl font-bold text-amber-600">₹{fmt(stats.pendingAmt)}</p>
         </div>
-        <div className="bg-surface border border-line rounded-xl p-4">
+        <button onClick={() => setPayFilter("partially_paid")}
+          className={`text-left rounded-xl p-4 border transition-all w-full cursor-pointer hover:shadow-md hover:-translate-y-0.5 bg-surface ${payFilter === "partially_paid" ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}>
           <p className="text-xs text-muted mb-1">Partially Paid</p>
           <p className="text-2xl font-bold text-blue-600">{stats.partiallyPaid}</p>
-        </div>
+        </button>
         <div className="bg-surface border border-line rounded-xl p-4">
           <p className="text-xs text-muted mb-1">Overdue</p>
           <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>

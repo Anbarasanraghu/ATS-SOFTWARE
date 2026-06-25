@@ -6,6 +6,10 @@ export function setToken(t: string | null) {
   token = t;
   if (t) localStorage.setItem("erp_token", t);
   else localStorage.removeItem("erp_token");
+  // Session/tenant changed — drop cached reference data so one tenant never
+  // sees another's categories / suppliers / fields.
+  clearReferenceCache();
+  invalidateCompanyCache();
 }
 export function getToken() { return token; }
 
@@ -395,6 +399,25 @@ export function invalidateCompanyCache() {
   _companyCacheTs = 0;
 }
 
+// ── Generic TTL cache for rarely-changing reference data ─────
+// Many pages reload the same categories / suppliers / field-definitions on every
+// mount; against a far-away DB that's a visible delay. Cache them briefly and
+// invalidate on writes, so edits still appear immediately.
+const _refCache = new Map<string, { ts: number; data: unknown }>();
+const REF_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function _cached<T>(key: string, fetcher: () => Promise<T>, ttl = REF_TTL): Promise<T> {
+  const hit = _refCache.get(key);
+  if (hit && Date.now() - hit.ts < ttl) return hit.data as T;
+  const data = await fetcher();
+  _refCache.set(key, { ts: Date.now(), data });
+  return data;
+}
+function _invalidateRef(key: string) {
+  for (const k of [..._refCache.keys()]) if (k === key || k.startsWith(key + ":")) _refCache.delete(k);
+}
+export function clearReferenceCache() { _refCache.clear(); }
+
 // ── API ───────────────────────────────────────────────────────
 export const api = {
   // Auth
@@ -404,19 +427,19 @@ export const api = {
 
   // Field defs
   fieldDefinitions: (entity: string) =>
-    request<FieldDef[]>(`/field-definitions?entity=${encodeURIComponent(entity)}`),
+    _cached(`fielddefs:${entity}`, () => request<FieldDef[]>(`/field-definitions?entity=${encodeURIComponent(entity)}`)),
 
   // Categories
-  listCategories: () => request<Category[]>("/inventory/categories"),
-  createCategory: (body: unknown) => request<Category>("/inventory/categories", { method: "POST", body }),
-  updateCategory: (id: string, body: unknown) => request<Category>(`/inventory/categories/${id}`, { method: "PUT", body }),
-  deleteCategory: (id: string) => request<void>(`/inventory/categories/${id}`, { method: "DELETE" }),
+  listCategories: () => _cached("categories", () => request<Category[]>("/inventory/categories")),
+  createCategory: async (body: unknown) => { const r = await request<Category>("/inventory/categories", { method: "POST", body }); _invalidateRef("categories"); return r; },
+  updateCategory: async (id: string, body: unknown) => { const r = await request<Category>(`/inventory/categories/${id}`, { method: "PUT", body }); _invalidateRef("categories"); return r; },
+  deleteCategory: async (id: string) => { await request<void>(`/inventory/categories/${id}`, { method: "DELETE" }); _invalidateRef("categories"); },
 
   // Suppliers
-  listSuppliers: () => request<Supplier[]>("/inventory/suppliers"),
-  createSupplier: (body: unknown) => request<Supplier>("/inventory/suppliers", { method: "POST", body }),
-  updateSupplier: (id: string, body: unknown) => request<Supplier>(`/inventory/suppliers/${id}`, { method: "PUT", body }),
-  deleteSupplier: (id: string) => request<void>(`/inventory/suppliers/${id}`, { method: "DELETE" }),
+  listSuppliers: () => _cached("suppliers", () => request<Supplier[]>("/inventory/suppliers")),
+  createSupplier: async (body: unknown) => { const r = await request<Supplier>("/inventory/suppliers", { method: "POST", body }); _invalidateRef("suppliers"); return r; },
+  updateSupplier: async (id: string, body: unknown) => { const r = await request<Supplier>(`/inventory/suppliers/${id}`, { method: "PUT", body }); _invalidateRef("suppliers"); return r; },
+  deleteSupplier: async (id: string) => { await request<void>(`/inventory/suppliers/${id}`, { method: "DELETE" }); _invalidateRef("suppliers"); },
 
   // Stock movements
   listStockMovements: (productId?: string) =>
@@ -647,6 +670,5 @@ export const api = {
   adminFields: (tid: string, entity: string) =>
     request<{ id: string; field_key: string; label: string; data_type: string; is_required: boolean; options: unknown[] }[]>(
       `/admin/tenants/${tid}/field-definitions?entity=${entity}`),
-  adminAddField: (tid: string, body: unknown) =>
-    request(`/admin/tenants/${tid}/field-definitions`, { method: "POST", body }),
+  adminAddField: async (tid: string, body: unknown) => { const r = await request(`/admin/tenants/${tid}/field-definitions`, { method: "POST", body }); _invalidateRef("fielddefs"); return r; },
 };
