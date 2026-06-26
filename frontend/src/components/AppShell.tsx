@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LogOut, Settings, SlidersHorizontal } from "lucide-react";
+import { LogOut, Settings, SlidersHorizontal, Sparkles, Users } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { navForModules, MODULE_NAV } from "./modules";
 import type { ReactNode } from "react";
@@ -11,6 +11,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);   // mobile drawer
   // Platform admins see every module; tenants see only what's enabled for them.
   const items = me?.user?.is_platform_admin ? MODULE_NAV : navForModules(me?.modules ?? []);
+  // Owner/admin can manage the workspace (team + settings); members can't.
+  const canManage = !!me?.user?.is_platform_admin || ["owner", "admin"].includes(me?.user?.role ?? "");
 
   // A parent link (e.g. /pharmacy) must match exactly so it doesn't stay
   // highlighted on a child route that has its own nav entry (/pharmacy/expiry).
@@ -65,7 +67,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           })}
 
           <NavLink
-            to="/settings"
+            to="/assistant"
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
@@ -73,8 +75,36 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   : "text-muted hover:text-ink hover:bg-line/60"
               }`
             }>
-            <SlidersHorizontal size={16} className="flex-shrink-0" /> Settings
+            <Sparkles size={16} className="flex-shrink-0" /> AI Assistant
           </NavLink>
+
+          {canManage && (
+            <NavLink
+              to="/team"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-accent text-white shadow-sm"
+                    : "text-muted hover:text-ink hover:bg-line/60"
+                }`
+              }>
+              <Users size={16} className="flex-shrink-0" /> Team
+            </NavLink>
+          )}
+
+          {canManage && (
+            <NavLink
+              to="/settings"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-accent text-white shadow-sm"
+                    : "text-muted hover:text-ink hover:bg-line/60"
+                }`
+              }>
+              <SlidersHorizontal size={16} className="flex-shrink-0" /> Settings
+            </NavLink>
+          )}
 
           {me?.user?.is_platform_admin && (
             <NavLink

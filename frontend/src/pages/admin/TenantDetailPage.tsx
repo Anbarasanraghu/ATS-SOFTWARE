@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { api } from "../../lib/api";
+import { api, type AdminTenant } from "../../lib/api";
 
 type Mod = { module_id: string; code: string; name: string; category: string; enabled: boolean };
 type FieldDef = { id: string; field_key: string; label: string; data_type: string; is_required: boolean };
@@ -14,11 +14,28 @@ export default function TenantDetailPage() {
   const [fields, setFields] = useState<FieldDef[]>([]);
   const [f, setF] = useState({ field_key: "", label: "", data_type: "text", is_required: false });
   const [saving, setSaving] = useState(false);
+  const [tenant, setTenant] = useState<AdminTenant | null>(null);
+  const [seats, setSeats] = useState<number>(1);
+  const [savingSeats, setSavingSeats] = useState(false);
 
   async function loadMods() { setMods(await api.adminTenantModules(id)); }
   async function loadFields(ent = entity) { setFields(await api.adminFields(id, ent)); }
+  async function loadTenant() {
+    const t = (await api.adminTenants()).find((x) => x.id === id) ?? null;
+    setTenant(t);
+    if (t) setSeats(t.max_users);
+  }
 
-  useEffect(() => { void loadMods(); }, [id]);
+  async function saveSeats() {
+    setSavingSeats(true);
+    try {
+      const updated = await api.adminUpdateTenant(id, { max_users: Math.max(1, seats) });
+      setTenant(updated);
+      setSeats(updated.max_users);
+    } finally { setSavingSeats(false); }
+  }
+
+  useEffect(() => { void loadMods(); void loadTenant(); }, [id]);
   useEffect(() => { void loadFields(entity); }, [id, entity]);
 
   async function toggle(module_id: string, enabled: boolean) {
@@ -40,7 +57,33 @@ export default function TenantDetailPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-xl font-semibold">Configure tenant</h1>
+      <h1 className="text-xl font-semibold">Configure tenant{tenant ? ` — ${tenant.name}` : ""}</h1>
+
+      {/* Seats & billing */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Seats &amp; billing</h2>
+        <div className="bg-surface border border-line rounded-lg p-4 flex flex-wrap items-end gap-6">
+          <div>
+            <div className="text-xs text-muted">Active users</div>
+            <div className="text-lg font-bold">{tenant?.active_users ?? "—"} / {tenant?.max_users ?? "—"}</div>
+          </div>
+          <div>
+            <div className="text-xs text-muted">Revenue / month</div>
+            <div className="text-lg font-bold">${(tenant?.monthly_total ?? 0).toLocaleString()}</div>
+            <div className="text-[11px] text-muted">${tenant?.price_per_user ?? 100}/user</div>
+          </div>
+          <label className="block">
+            <span className="text-xs font-medium uppercase tracking-wide text-muted">Paid seats</span>
+            <input type="number" min={1} value={seats}
+              onChange={(e) => setSeats(parseInt(e.target.value) || 1)}
+              className="mt-1 w-28 rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
+          </label>
+          <button onClick={saveSeats} disabled={savingSeats}
+            className="rounded-md bg-accent text-white px-4 py-2 text-sm font-medium disabled:opacity-50">
+            {savingSeats ? "Saving…" : "Update seats"}
+          </button>
+        </div>
+      </section>
 
       {/* Modules */}
       <section className="space-y-3">

@@ -662,7 +662,13 @@ export const api = {
     request<PrintSettings>("/settings/print", { method: "PATCH", body }),
 
   // Admin
-  adminTenants: () => request<{ id: string; name: string; slug: string; vertical: string }[]>("/admin/tenants"),
+  adminTenants: () => request<AdminTenant[]>("/admin/tenants"),
+  adminCreateTenant: (body: {
+    tenant_name: string; slug: string; vertical?: string; max_users?: number;
+    owner_email: string; owner_name?: string; owner_password: string;
+  }) => request<AdminTenant>("/admin/tenants", { method: "POST", body }),
+  adminUpdateTenant: (tid: string, body: { name?: string; max_users?: number }) =>
+    request<AdminTenant>(`/admin/tenants/${tid}`, { method: "PATCH", body }),
   adminTenantModules: (tid: string) =>
     request<{ module_id: string; code: string; name: string; category: string; enabled: boolean }[]>(`/admin/tenants/${tid}/modules`),
   adminToggleModule: (tid: string, module_id: string, enabled: boolean) =>
@@ -671,4 +677,59 @@ export const api = {
     request<{ id: string; field_key: string; label: string; data_type: string; is_required: boolean; options: unknown[] }[]>(
       `/admin/tenants/${tid}/field-definitions?entity=${entity}`),
   adminAddField: async (tid: string, body: unknown) => { const r = await request(`/admin/tenants/${tid}/field-definitions`, { method: "POST", body }); _invalidateRef("fielddefs"); return r; },
+};
+
+// ── AI Agent ─────────────────────────────────────────────────
+export interface AgentToolCall { name: string; args: Record<string, unknown>; status: string; }
+export interface AgentPendingAction { tool: string; args: Record<string, unknown>; summary: string; description: string; }
+export interface AgentChatResponse {
+  conversation_id: string;
+  status: "completed" | "needs_confirmation";
+  reply: string;
+  pending_action?: AgentPendingAction | null;
+  tool_calls: AgentToolCall[];
+}
+export interface AgentToolInfo { name: string; description: string; category: string; destructive: boolean; }
+export interface AgentConversation { id: string; title: string; updated_at: string; }
+export interface AgentMessage { role: string; content: string; tool_calls: AgentToolCall[]; created_at: string; }
+
+export const agentApi = {
+  chat: (body: {
+    message?: string;
+    conversation_id?: string | null;
+    confirm_action?: { tool: string; args: Record<string, unknown> };
+  }) => request<AgentChatResponse>("/agent/chat", { method: "POST", body }),
+  tools: () => request<AgentToolInfo[]>("/agent/tools"),
+  conversations: () => request<AgentConversation[]>("/agent/conversations"),
+  messages: (id: string) => request<AgentMessage[]>(`/agent/conversations/${id}/messages`),
+};
+
+// ── Admin tenants & per-seat billing ─────────────────────────
+export interface AdminTenant {
+  id: string; name: string; slug: string; vertical: string;
+  max_users: number; active_users: number; price_per_user: number; monthly_total: number;
+}
+
+// ── Team (tenant-side multi-user) ────────────────────────────
+export interface TeamUser {
+  id: string; email: string; full_name: string | null;
+  role: string; status: string; is_owner: boolean; modules: string[];
+}
+export interface Seats {
+  max_users: number; active_users: number; available: number;
+  price_per_user: number; monthly_total: number; can_add: boolean;
+}
+export interface TeamModule { module_id: string; code: string; name: string; }
+
+export const teamApi = {
+  seats: () => request<Seats>("/team/seats"),
+  modules: () => request<TeamModule[]>("/team/modules"),
+  users: () => request<TeamUser[]>("/team/users"),
+  createUser: (body: {
+    email: string; full_name?: string; password: string; role: string; modules: string[];
+  }) => request<TeamUser>("/team/users", { method: "POST", body }),
+  updateUser: (id: string, body: {
+    full_name?: string; role?: string; status?: string; password?: string; modules?: string[];
+  }) => request<TeamUser>(`/team/users/${id}`, { method: "PATCH", body }),
+  deleteUser: (id: string) => request(`/team/users/${id}`, { method: "DELETE" }),
 };

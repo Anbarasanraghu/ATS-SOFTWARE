@@ -15,6 +15,8 @@ from app.modules.hr.router import router as hr_router
 from app.modules.pharmacy.router import router as pharmacy_router
 from app.modules.settings.router import router as settings_router
 from app.modules.payroll.router import router as payroll_router
+from app.agent.router import router as agent_router
+from app.team.router import router as team_router
 from app.admin.router import router as admin_router
 
 
@@ -55,6 +57,8 @@ app.include_router(fields_router,    tags=["config"])
 app.include_router(admin_router,     prefix="/admin",      tags=["admin"])
 app.include_router(settings_router,  prefix="/settings",   tags=["settings"])
 app.include_router(payroll_router,   prefix="/payroll",    tags=["payroll"])
+app.include_router(agent_router,     prefix="/agent",      tags=["agent"])
+app.include_router(team_router,      prefix="/team",       tags=["team"])
 
 
 @app.get("/health")

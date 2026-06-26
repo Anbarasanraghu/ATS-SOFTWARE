@@ -15,6 +15,7 @@ class Tenant(Base):
     slug: Mapped[str] = mapped_column(String, unique=True)
     vertical: Mapped[str] = mapped_column(String, default="generic")
     status: Mapped[str] = mapped_column(String, default="active")
+    max_users: Mapped[int] = mapped_column(Integer, default=1)  # paid seat limit
 
 
 class User(Base):
@@ -27,6 +28,16 @@ class User(Base):
     is_platform_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     role: Mapped[str] = mapped_column(String, default="member")
     status: Mapped[str] = mapped_column(String, default="active")
+
+
+class UserModule(Base):
+    """Which modules a given user may access (decided by the tenant owner/admin)."""
+    __tablename__ = "user_modules"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"))
+    module_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("modules.id", ondelete="CASCADE"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Module(Base):
@@ -562,4 +573,41 @@ class PayrollActivityLog(Base):
     activity_type: Mapped[str] = mapped_column(String(50))
     description: Mapped[str | None] = mapped_column(Text)
     created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+# ── AI Agent ─────────────────────────────────────────────────
+
+class AgentConversation(Base):
+    __tablename__ = "agent_conversations"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    title: Mapped[str] = mapped_column(Text, default="New conversation")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AgentMessage(Base):
+    __tablename__ = "agent_messages"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    conversation_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_conversations.id", ondelete="CASCADE"))
+    role: Mapped[str] = mapped_column(String)            # user | assistant
+    content: Mapped[str] = mapped_column(Text, default="")
+    tool_calls: Mapped[list] = mapped_column(JSONB, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AgentToolCall(Base):
+    __tablename__ = "agent_tool_calls"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    tenant_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    conversation_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_conversations.id", ondelete="CASCADE"))
+    user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    tool_name: Mapped[str] = mapped_column(String)
+    arguments: Mapped[dict] = mapped_column(JSONB, default=dict)
+    status: Mapped[str] = mapped_column(String)          # ok | error | denied
+    error: Mapped[str | None] = mapped_column(Text)
+    duration_ms: Mapped[int | None] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

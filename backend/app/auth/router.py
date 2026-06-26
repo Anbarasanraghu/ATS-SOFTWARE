@@ -1,12 +1,12 @@
 import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import and_, select
 
 from app.auth.deps import get_request_context
-from app.auth.schemas import LoginIn, RegisterTenantIn, TokenOut
-from app.core.security import create_access_token, hash_password, verify_password
-from app.db.models import Module, Tenant, TenantModule, User
+from app.auth.schemas import LoginIn, TokenOut
+from app.core.security import create_access_token, verify_password
+from app.db.models import Module, Tenant, TenantModule, User, UserModule
 from app.db.session import SessionLocal, set_tenant_context
 
 router = APIRouter()
@@ -28,48 +28,6 @@ def _db_error(exc: Exception) -> HTTPException:
         return HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE,
                              "Database tables missing. Run SQL migrations in your Supabase SQL Editor.")
     return HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, f"Database error: {err}")
-
-
-@router.post("/register-tenant", status_code=201)
-async def register_tenant(body: RegisterTenantIn):
-    try:
-        async with SessionLocal() as session:
-            async with session.begin():
-                exists = (
-                    await session.execute(select(Tenant).where(Tenant.slug == body.slug))
-                ).scalar_one_or_none()
-                if exists:
-                    raise HTTPException(status.HTTP_409_CONFLICT, "Slug already taken")
-
-                tenant = Tenant(name=body.tenant_name, slug=body.slug, vertical=body.vertical)
-                session.add(tenant)
-                await session.flush()
-
-                await set_tenant_context(session, tenant.id)
-
-                session.add(
-                    User(
-                        tenant_id=tenant.id,
-                        email=body.admin_email,
-                        full_name=body.admin_name,
-                        password_hash=hash_password(body.admin_password),
-                        status="active",
-                    )
-                )
-
-                core = (
-                    await session.execute(select(Module).where(Module.category == "core"))
-                ).scalars().all()
-                for m in core:
-                    session.add(TenantModule(tenant_id=tenant.id, module_id=m.id, enabled=True))
-    except HTTPException:
-        raise
-    except asyncio.CancelledError:
-        raise _DB_DOWN
-    except Exception as exc:
-        raise _db_error(exc) from exc
-
-    return {"tenant_slug": body.slug, "message": "Tenant created. You can now log in."}
 
 
 @router.post("/login", response_model=TokenOut)
@@ -119,13 +77,20 @@ async def me(ctx=Depends(get_request_context)):
             await session.execute(select(Tenant).where(Tenant.id == user.tenant_id))
         ).scalar_one()
 
-        module_codes = (
-            await session.execute(
-                select(Module.code)
-                .join(TenantModule, TenantModule.module_id == Module.id)
-                .where(TenantModule.enabled.is_(True))
-            )
-        ).scalars().all()
+        # Effective modules: owner/admin (and platform admin) get every module the
+        # tenant has enabled; everyone else only gets the modules assigned to them.
+        privileged = user.is_platform_admin or user.role in ("owner", "admin")
+        q = (
+            select(Module.code)
+            .join(TenantModule, TenantModule.module_id == Module.id)
+            .where(TenantModule.enabled.is_(True))
+        )
+        if not privileged:
+            q = q.join(UserModule, and_(
+                UserModule.module_id == Module.id,
+                UserModule.user_id == user.id,
+            ))
+        module_codes = (await session.execute(q)).scalars().all()
     except HTTPException:
         raise
     except asyncio.CancelledError:
