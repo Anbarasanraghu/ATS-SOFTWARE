@@ -319,7 +319,7 @@ export default function InventoryPage() {
           ))}
         </div>
         {tab === "items" && (
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex flex-wrap items-center gap-2">
             <ScanInput onScan={handleScan} className="w-56" placeholder="Scan barcode → stock-in / add…" />
             <input className="rounded-xl neu-inset px-3 py-2 text-sm outline-none focus:border-accent w-48"
               placeholder="Search name / SKU / barcode…" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -507,7 +507,7 @@ export default function InventoryPage() {
 
       {tab === "suppliers" && (
         <div className="space-y-4">
-          <form onSubmit={addSupplier} className="neu rounded-2xl p-4 grid grid-cols-2 gap-3">
+          <form onSubmit={addSupplier} className="neu rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-muted">Name *</span>
               <input required className={`${inputCls} mt-1`} value={supForm.name} onChange={(e) => setSupForm({ ...supForm, name: e.target.value })} /></label>
             <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-muted">Contact Person</span>
@@ -535,12 +535,12 @@ export default function InventoryPage() {
 
       {movingProduct && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <form onSubmit={submitMove} className="neu rounded-2xl p-6 w-full max-w-md space-y-4 shadow-lg">
+          <form onSubmit={submitMove} className="neu rounded-2xl p-4 sm:p-6 w-full max-w-md space-y-4 shadow-lg">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">Stock Movement — {movingProduct.name}</h2>
               <button type="button" onClick={() => setMovingProduct(null)} className="text-muted hover:text-ink"><X size={18} /></button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-muted">Type</span>
                 <select className={`${inputCls} mt-1`} value={moveForm.movement_type} onChange={(e) => setMoveForm({ ...moveForm, movement_type: e.target.value })}>
                   <option value="in">Stock In</option><option value="out">Stock Out</option>
@@ -602,8 +602,8 @@ export default function InventoryPage() {
 
             {/* Add */}
             <div className="border-t border-line pt-3 space-y-2">
-              <div className="grid grid-cols-3 gap-2">
-                <label className="block col-span-3"><span className="text-[11px] text-muted">Barcode value (blank = generate)</span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <label className="block sm:col-span-3"><span className="text-[11px] text-muted">Barcode value (blank = generate)</span>
                   <input className={`${inputCls} mt-1 font-mono`} placeholder="scan or type… leave blank to auto-generate"
                     value={bcForm.barcode} onChange={(e) => setBcForm({ ...bcForm, barcode: e.target.value })} /></label>
                 <label className="block"><span className="text-[11px] text-muted">Type</span>

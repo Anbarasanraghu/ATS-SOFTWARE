@@ -21,8 +21,8 @@ const TABS: { id: Tab; label: string; icon: React.ElementType; comingSoon?: bool
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[180px_1fr] items-start gap-4">
-      <label className="text-sm font-medium text-ink pt-2">{label}</label>
+    <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] items-start gap-1.5 sm:gap-4">
+      <label className="text-sm font-medium text-ink sm:pt-2">{label}</label>
       <div>{children}</div>
     </div>
   );
@@ -335,25 +335,25 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-extrabold font-display mb-1 bg-gradient-to-r from-ink to-info bg-clip-text text-transparent">Settings</h1>
       <p className="text-sm text-muted mb-6">Configure your company profile, invoice defaults, and print options.</p>
 
-      <div className="flex gap-6">
-        {/* Sidebar tabs */}
-        <div className="w-48 flex-shrink-0">
-          <nav className="space-y-0.5">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+        {/* Tabs — horizontal scrollable strip on mobile, vertical sidebar on md+ */}
+        <div className="w-full md:w-48 md:flex-shrink-0">
+          <nav className="flex md:flex-col gap-1 overflow-x-auto pb-1 md:pb-0 md:space-y-0.5">
             {TABS.map(t => {
               const Icon = t.icon;
               return (
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-left transition-colors ${
+                  className={`flex-shrink-0 md:flex-shrink flex items-center gap-2 md:gap-2.5 px-3 py-2 md:py-2.5 rounded-lg text-sm font-medium whitespace-nowrap md:text-left transition-colors md:w-full ${
                     tab === t.id
                       ? "bg-accent text-white"
                       : "text-muted hover:text-ink hover:bg-line/60"
                   }`}>
                   <Icon size={15} className="flex-shrink-0" />
-                  <span className="flex-1">{t.label}</span>
+                  <span className="md:flex-1">{t.label}</span>
                   {t.comingSoon && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${tab === t.id ? "bg-white/20 text-white" : "bg-line text-muted"}`}>
+                    <span className={`hidden md:inline text-[10px] px-1.5 py-0.5 rounded font-medium ${tab === t.id ? "bg-white/20 text-white" : "bg-line text-muted"}`}>
                       Soon
                     </span>
                   )}
@@ -364,7 +364,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Content area */}
-        <div className="flex-1 ws-card p-6 min-h-[500px]">
+        <div className="flex-1 ws-card p-4 sm:p-6 min-h-[400px] md:min-h-[500px]">
           {tab === "company"       && <CompanyTab />}
           {tab === "invoice"       && <InvoiceTab />}
           {tab === "print"         && <PrintTab />}

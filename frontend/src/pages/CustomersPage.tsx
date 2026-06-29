@@ -386,7 +386,7 @@ function PaymentFollowupPanel({
         </div>
 
         {/* Summary stat tiles */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="rounded-xl border bg-blue-50 border-blue-100 px-4 py-3">
             <p className="text-[11px] font-semibold text-blue-600 uppercase tracking-wide">Total Invoiced</p>
             <p className="text-2xl font-bold text-blue-800 mt-1 leading-none">{fmt(totalInvoiced)}</p>
@@ -407,7 +407,7 @@ function PaymentFollowupPanel({
 
         {/* Search + status filter */}
         <div className="flex items-center gap-2">
-          <input className="rounded-md input-3d px-3 py-1.5 text-sm outline-none focus:border-black w-60"
+          <input className="rounded-md input-3d px-3 py-1.5 text-sm outline-none focus:border-black w-full sm:w-60"
             placeholder="Search customer, invoice, phone…"
             value={search} onChange={e => setSearch(e.target.value)} />
           <select className="rounded-md input-3d px-3 py-1.5 text-sm outline-none focus:border-black"
@@ -685,7 +685,7 @@ export default function CustomersPage() {
 
       {/* ── ROW 2: Toolbar ── */}
       <div className="flex flex-wrap items-center gap-2">
-        <input className={`${inputCls} w-64`} placeholder="Search name, phone, company…"
+        <input className={`${inputCls} w-full sm:w-64`} placeholder="Search name, phone, company…"
           value={search} onChange={e => setSearch(e.target.value)} />
         <button onClick={() => setShowPaymentPanel(v => !v)}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-md border text-sm transition-colors ${
@@ -731,7 +731,7 @@ export default function CustomersPage() {
       )}
 
       {/* ── Stats Cards ── */}
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard label="Total Customers" value={stats.total} icon={Users} accent="bg-blue-50 text-blue-600"
           onClick={hasFilters ? resetFilters : undefined} active={!hasFilters && customers.length > 0} />
         <StatCard label="Today Follow-ups" value={stats.todayFollowups} icon={Calendar} accent="bg-neutral-100 text-black"
@@ -762,7 +762,7 @@ export default function CustomersPage() {
       {/* ── Filter Panel ── */}
       {showFilters && (
         <div className="card-3d p-5">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-semibold text-muted uppercase tracking-wide block mb-1.5">Status</label>
               <select className={`${selCls} w-full`} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
@@ -938,7 +938,7 @@ export default function CustomersPage() {
             </div>
 
             {/* ── Pagination Footer ── */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-t border-line bg-paper/40">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3.5 border-t border-line bg-paper/40">
               <p className="text-xs text-muted">
                 Showing {filtered.length === 0 ? 0 : (page - 1) * pageSize + 1} to{" "}
                 {Math.min(page * pageSize, filtered.length)} of {filtered.length}{" "}

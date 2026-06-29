@@ -75,13 +75,13 @@ export default function CustomerDetailPage() {
             {customer.status}
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mt-4 text-sm">
           {customer.email && <div className="flex items-center gap-2 text-muted"><Mail size={14} />{customer.email}</div>}
           {customer.phone && <div className="flex items-center gap-2 text-muted"><Phone size={14} />{customer.phone}</div>}
           {customer.address && <div className="text-muted">{customer.address}</div>}
         </div>
         {/* KPIs */}
-        <div className="grid grid-cols-3 gap-4 mt-5 pt-5 border-t border-line">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 pt-5 border-t border-line">
           <div className="text-center">
             <div className="text-2xl font-bold">{invoices.length}</div>
             <div className="text-xs text-muted uppercase tracking-wide mt-1">Total Invoices</div>

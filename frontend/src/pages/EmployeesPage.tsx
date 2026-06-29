@@ -13,7 +13,7 @@ import { exportEmployees, exportEmployeeReport } from "./employees/excelUtils";
 const STATUS_BADGE: Record<string, string> = {
   active:     "bg-emerald-100 text-emerald-700",
   on_leave:   "bg-amber-100 text-amber-700",
-  inactive:   "bg-surface-2 text-muted",
+  inactive:   "bg-[#DDE8F5] text-[#41415C]",
   terminated: "bg-red-100 text-red-600",
 };
 
@@ -26,17 +26,17 @@ function StatCard({ label, value, icon: Icon, color, active, onClick }: {
   return (
     <button
       onClick={onClick}
-      className={`text-left bg-surface border rounded-xl p-4 flex items-center gap-4 transition-all w-full
-        ${onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5" : "cursor-default"}
-        ${active ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}
+      className={`hr-card-sm p-4 flex items-center gap-3 w-full text-left transition-all duration-200
+        ${onClick ? "cursor-pointer" : "cursor-default"}
+        ${active ? "ring-2 ring-blue-400/40" : ""}
       `}
     >
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
         <Icon size={18} />
       </div>
       <div>
-        <p className="text-2xl font-bold text-ink">{value}</p>
-        <p className="text-xs text-muted">{label}</p>
+        <p className="text-2xl font-bold text-[#1B1B2F]">{value}</p>
+        <p className="text-xs text-[#8A8AA0]">{label}</p>
       </div>
     </button>
   );
@@ -157,46 +157,45 @@ export default function EmployeesPage() {
     await api.deleteDesignation(id); refresh();
   }
 
-  const inputCls = "border border-line rounded-lg px-3 py-2 text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-accent/30";
-
   return (
-    <div className="flex flex-col h-full bg-paper">
+    <div className="hr-scene flex flex-col h-full">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-line flex flex-wrap items-center justify-between gap-3 shrink-0">
+      <div className="px-6 py-5 flex flex-wrap items-center justify-between gap-3 shrink-0"
+        style={{ borderBottom: "1px solid #D8E6F5" }}>
         <div>
-          <h1 className="text-xl font-bold text-ink">Employees</h1>
-          <p className="text-sm text-muted mt-0.5">Manage your team, departments &amp; designations</p>
+          <h1 className="text-xl font-bold text-[#1B1B2F]">Employees</h1>
+          <p className="text-sm text-[#8A8AA0] mt-0.5">Manage your team, departments &amp; designations</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setShowImport(true)}
-            className="flex items-center gap-2 px-3 py-2 border border-line rounded-xl text-sm text-muted hover:text-ink hover:border-ink/30 bg-paper transition-colors"
+            className="hr-btn flex items-center gap-2 px-3 py-2 text-sm text-[#41415C]"
           >
             <Upload size={15} /> Import Excel
           </button>
           <button
             onClick={() => exportEmployees(filtered, departments)}
-            className="flex items-center gap-2 px-3 py-2 border border-line rounded-xl text-sm text-muted hover:text-ink hover:border-ink/30 bg-paper transition-colors"
+            className="hr-btn flex items-center gap-2 px-3 py-2 text-sm text-[#41415C]"
           >
             <Download size={15} /> Export Employees
           </button>
           <button
             onClick={() => exportEmployeeReport(filtered, departments)}
-            className="flex items-center gap-2 px-3 py-2 border border-line rounded-xl text-sm text-muted hover:text-ink hover:border-ink/30 bg-paper transition-colors"
+            className="hr-btn flex items-center gap-2 px-3 py-2 text-sm text-[#41415C]"
           >
             <FileBarChart2 size={15} /> Export Report
           </button>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl text-sm font-medium hover:bg-accent/90"
+            className="hr-btn-primary flex items-center gap-2 px-4 py-2 text-sm font-medium"
           >
             <Plus size={16} /> New Employee
           </button>
         </div>
       </div>
 
-      {/* Stats — clickable filter buttons */}
-      <div className="px-6 py-4 grid grid-cols-6 gap-3 shrink-0">
+      {/* Stats */}
+      <div className="px-6 py-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 shrink-0">
         <StatCard
           label="Total Employees" value={stats.total} icon={Users} color="bg-blue-100 text-blue-600"
           active={tab === "employees" && statusFilter === "all"}
@@ -213,7 +212,7 @@ export default function EmployeesPage() {
           onClick={() => { setTab("employees"); setStatusFilter("on_leave"); }}
         />
         <StatCard
-          label="Inactive" value={stats.inactive} icon={UserX} color="bg-surface-2 text-muted"
+          label="Inactive" value={stats.inactive} icon={UserX} color="bg-[#DDE8F5] text-[#41415C]"
           active={tab === "employees" && statusFilter === "inactive"}
           onClick={() => { setTab("employees"); setStatusFilter("inactive"); }}
         />
@@ -229,32 +228,32 @@ export default function EmployeesPage() {
         />
       </div>
 
-      {/* Main Tabs */}
-      <div className="px-6 flex gap-1 shrink-0 border-b border-line">
-        {(["employees", "departments", "designations"] as MainTab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-sm font-medium capitalize border-b-2 transition-colors ${
-              tab === t
-                ? "border-accent text-accent"
-                : "border-transparent text-muted hover:text-ink"
-            }`}
-          >
-            {t === "designations" ? "Designations" : t === "departments" ? "Departments" : "Employees"}
-          </button>
-        ))}
+      {/* Tabs */}
+      <div className="px-6 shrink-0" style={{ borderBottom: "1px solid #D8E6F5" }}>
+        <div className="flex gap-1 p-1 w-fit hr-card-sm">
+          {(["employees", "departments", "designations"] as MainTab[]).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-2 text-sm capitalize transition-all ${
+                tab === t ? "hr-tab-active" : "hr-tab"
+              }`}
+            >
+              {t === "designations" ? "Designations" : t === "departments" ? "Departments" : "Employees"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Employees Tab */}
       {tab === "employees" && (
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Filters */}
-          <div className="px-6 py-3 flex gap-3 items-center shrink-0 border-b border-line/60">
+          <div className="px-4 sm:px-6 py-3 flex flex-wrap gap-2 sm:gap-3 items-center shrink-0" style={{ borderBottom: "1px solid #D8E6F5" }}>
             <div className="relative flex-1 max-w-xs">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A8AA0]" />
               <input
-                className={`${inputCls} pl-9 w-full`}
+                className="hr-inset pl-9 pr-3 py-2 text-sm text-[#1B1B2F] w-full"
                 placeholder="Search employees…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -262,7 +261,7 @@ export default function EmployeesPage() {
             </div>
             <div className="relative">
               <select
-                className={`${inputCls} pr-8 appearance-none`}
+                className="hr-inset pl-3 pr-8 py-2 text-sm text-[#1B1B2F] appearance-none"
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
               >
@@ -272,35 +271,35 @@ export default function EmployeesPage() {
                 <option value="inactive">Inactive</option>
                 <option value="terminated">Terminated</option>
               </select>
-              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8A8AA0] pointer-events-none" />
             </div>
             <div className="relative">
               <select
-                className={`${inputCls} pr-8 appearance-none`}
+                className="hr-inset pl-3 pr-8 py-2 text-sm text-[#1B1B2F] appearance-none"
                 value={deptFilter}
                 onChange={e => setDeptFilter(e.target.value)}
               >
                 <option value="all">All Departments</option>
                 {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
-              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8A8AA0] pointer-events-none" />
             </div>
-            <span className="text-sm text-muted ml-auto">{filtered.length} employee{filtered.length !== 1 ? "s" : ""}</span>
+            <span className="text-sm text-[#8A8AA0] ml-auto">{filtered.length} employee{filtered.length !== 1 ? "s" : ""}</span>
           </div>
 
           {/* Table */}
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto" style={{ background: "#EEF4FA" }}>
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10">
-                <tr className="bg-surface border-b border-line">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Employee</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Emp. No</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Department</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Designation / Role</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Phone</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Hire Date</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Salary</th>
+                <tr style={{ background: "#DDE8F5", borderBottom: "1px solid #C4CFDD" }}>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#41415C]">Employee</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#41415C]">Emp. No</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#41415C]">Department</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#41415C]">Designation / Role</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#41415C]">Phone</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#41415C]">Hire Date</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#41415C]">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-[#41415C]">Salary</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -310,33 +309,35 @@ export default function EmployeesPage() {
                   return (
                     <tr
                       key={e.id}
-                      className="border-b border-line/60 hover:bg-surface/60 transition-colors cursor-pointer"
+                      style={{ borderBottom: "1px solid #D8E6F5" }}
+                      className="hover:bg-[#E3EDF8] transition-colors cursor-pointer"
                       onClick={() => setDrawerEmployee(e)}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-accent/15 flex items-center justify-center text-accent font-semibold text-sm shrink-0">
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm shrink-0"
+                            style={{ background: "linear-gradient(135deg, #3B82F6, #2563EB)", boxShadow: "2px 2px 6px #C4CFDD, -1px -1px 4px #FFFFFF" }}>
                             {e.full_name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="font-medium text-ink leading-tight">{e.full_name}</p>
-                            {e.email && <p className="text-xs text-muted truncate max-w-[180px]">{e.email}</p>}
+                            <p className="font-medium text-[#1B1B2F] leading-tight">{e.full_name}</p>
+                            {e.email && <p className="text-xs text-[#8A8AA0] truncate max-w-[180px]">{e.email}</p>}
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-muted">{e.employee_no ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted">{dept?.name ?? e.department ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted">{e.designation || e.job_title || "—"}</td>
-                      <td className="px-4 py-3 text-muted">{e.phone ?? "—"}</td>
-                      <td className="px-4 py-3 text-muted">
+                      <td className="px-4 py-3 text-[#8A8AA0]">{e.employee_no ?? "—"}</td>
+                      <td className="px-4 py-3 text-[#8A8AA0]">{dept?.name ?? e.department ?? "—"}</td>
+                      <td className="px-4 py-3 text-[#8A8AA0]">{e.designation || e.job_title || "—"}</td>
+                      <td className="px-4 py-3 text-[#8A8AA0]">{e.phone ?? "—"}</td>
+                      <td className="px-4 py-3 text-[#8A8AA0]">
                         {e.hire_date ? new Date(e.hire_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_BADGE[e.status] ?? "bg-surface-2 text-muted"}`}>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_BADGE[e.status] ?? "bg-[#DDE8F5] text-[#41415C]"}`}>
                           {e.status.replace("_", " ").toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-muted">
+                      <td className="px-4 py-3 text-[#41415C]">
                         {e.salary ? `₹${e.salary.toLocaleString("en-IN")}` : "—"}
                       </td>
                       <td className="px-4 py-3" onClick={ev => ev.stopPropagation()}>
@@ -355,9 +356,11 @@ export default function EmployeesPage() {
             </table>
             {filtered.length === 0 && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <Users size={40} className="text-muted/40 mb-3" />
-                <p className="text-muted font-medium">No employees found</p>
-                <p className="text-sm text-muted/70 mt-1">Try adjusting your search or filters</p>
+                <div className="hr-card-sm w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Users size={28} className="text-[#8A8AA0]" />
+                </div>
+                <p className="text-[#41415C] font-medium">No employees found</p>
+                <p className="text-sm text-[#8A8AA0] mt-1">Try adjusting your search or filters</p>
               </div>
             )}
           </div>
@@ -368,57 +371,55 @@ export default function EmployeesPage() {
       {tab === "departments" && (
         <div className="flex-1 overflow-auto p-6">
           <div className="max-w-2xl space-y-4">
-            {/* Add form */}
-            <div className="bg-surface border border-line rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-ink mb-3">
+            <div className="hr-card p-5">
+              <h3 className="text-sm font-semibold text-[#1B1B2F] mb-4">
                 {editingDept ? `Edit: ${editingDept.name}` : "Add Department"}
               </h3>
               <div className="flex gap-3">
                 <input
-                  className={`${inputCls} flex-1`}
+                  className="hr-inset flex-1 px-3 py-2 text-sm text-[#1B1B2F]"
                   placeholder="Department name *"
                   value={deptName}
                   onChange={e => setDeptName(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") saveDept(); }}
                 />
                 <input
-                  className={`${inputCls} flex-1`}
+                  className="hr-inset flex-1 px-3 py-2 text-sm text-[#1B1B2F]"
                   placeholder="Description (optional)"
                   value={deptDesc}
                   onChange={e => setDeptDesc(e.target.value)}
                 />
-                <button onClick={saveDept} className="px-4 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent/90">
+                <button onClick={saveDept} className="hr-btn-primary px-4 py-2 text-sm font-medium">
                   {editingDept ? "Update" : "Add"}
                 </button>
                 {editingDept && (
                   <button onClick={() => { setEditingDept(null); setDeptName(""); setDeptDesc(""); }}
-                    className="px-4 py-2 text-sm border border-line rounded-lg text-muted hover:text-ink">
+                    className="hr-btn px-4 py-2 text-sm text-[#41415C]">
                     Cancel
                   </button>
                 )}
               </div>
             </div>
 
-            {/* List */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               {departments.map(d => {
                 const empCount = employees.filter(e => e.department_id === d.id).length;
                 return (
-                  <div key={d.id} className="bg-surface border border-line rounded-xl px-4 py-3 flex items-center justify-between">
+                  <div key={d.id} className="hr-card-sm px-5 py-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-ink">{d.name}</p>
-                      <p className="text-xs text-muted">{d.description || "No description"} · {empCount} employee{empCount !== 1 ? "s" : ""}</p>
+                      <p className="text-sm font-medium text-[#1B1B2F]">{d.name}</p>
+                      <p className="text-xs text-[#8A8AA0] mt-0.5">{d.description || "No description"} · {empCount} employee{empCount !== 1 ? "s" : ""}</p>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setEditingDept(d); setDeptName(d.name); setDeptDesc(d.description ?? ""); }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-accent hover:border-accent/40"
+                        className="hr-btn w-8 h-8 flex items-center justify-center text-[#8A8AA0] hover:text-blue-600"
                       >
                         <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => deleteDept(d.id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-danger hover:border-danger/40"
+                        className="hr-btn w-8 h-8 flex items-center justify-center text-[#8A8AA0] hover:text-red-500"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -427,7 +428,7 @@ export default function EmployeesPage() {
                 );
               })}
               {departments.length === 0 && (
-                <p className="text-sm text-muted text-center py-8">No departments yet. Add one above.</p>
+                <p className="text-sm text-[#8A8AA0] text-center py-8">No departments yet. Add one above.</p>
               )}
             </div>
           </div>
@@ -438,62 +439,60 @@ export default function EmployeesPage() {
       {tab === "designations" && (
         <div className="flex-1 overflow-auto p-6">
           <div className="max-w-2xl space-y-4">
-            {/* Add form */}
-            <div className="bg-surface border border-line rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-ink mb-3">
+            <div className="hr-card p-5">
+              <h3 className="text-sm font-semibold text-[#1B1B2F] mb-4">
                 {editingDesig ? `Edit: ${editingDesig.name}` : "Add Designation"}
               </h3>
               <div className="flex gap-3">
                 <input
-                  className={`${inputCls} flex-1`}
+                  className="hr-inset flex-1 px-3 py-2 text-sm text-[#1B1B2F]"
                   placeholder="Designation name *"
                   value={desigName}
                   onChange={e => setDesigName(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") saveDesig(); }}
                 />
                 <select
-                  className={`${inputCls} flex-1`}
+                  className="hr-inset flex-1 px-3 py-2 text-sm text-[#1B1B2F]"
                   value={desigDeptId}
                   onChange={e => setDesigDeptId(e.target.value)}
                 >
                   <option value="">Department (optional)</option>
                   {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>
-                <button onClick={saveDesig} className="px-4 py-2 bg-accent text-white text-sm rounded-lg hover:bg-accent/90">
+                <button onClick={saveDesig} className="hr-btn-primary px-4 py-2 text-sm font-medium">
                   {editingDesig ? "Update" : "Add"}
                 </button>
                 {editingDesig && (
                   <button onClick={() => { setEditingDesig(null); setDesigName(""); setDesigDeptId(""); }}
-                    className="px-4 py-2 text-sm border border-line rounded-lg text-muted hover:text-ink">
+                    className="hr-btn px-4 py-2 text-sm text-[#41415C]">
                     Cancel
                   </button>
                 )}
               </div>
             </div>
 
-            {/* List */}
-            <div className="space-y-2">
+            <div className="space-y-3">
               {designations.map(d => {
                 const dept = departments.find(dep => dep.id === d.department_id);
                 const empCount = employees.filter(e => e.designation === d.name).length;
                 return (
-                  <div key={d.id} className="bg-surface border border-line rounded-xl px-4 py-3 flex items-center justify-between">
+                  <div key={d.id} className="hr-card-sm px-5 py-4 flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-ink">{d.name}</p>
-                      <p className="text-xs text-muted">
+                      <p className="text-sm font-medium text-[#1B1B2F]">{d.name}</p>
+                      <p className="text-xs text-[#8A8AA0] mt-0.5">
                         {dept ? dept.name : "All departments"} · {empCount} employee{empCount !== 1 ? "s" : ""}
                       </p>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setEditingDesig(d); setDesigName(d.name); setDesigDeptId(d.department_id ?? ""); }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-accent hover:border-accent/40"
+                        className="hr-btn w-8 h-8 flex items-center justify-center text-[#8A8AA0] hover:text-blue-600"
                       >
                         <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => deleteDesig(d.id)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-danger hover:border-danger/40"
+                        className="hr-btn w-8 h-8 flex items-center justify-center text-[#8A8AA0] hover:text-red-500"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -502,7 +501,7 @@ export default function EmployeesPage() {
                 );
               })}
               {designations.length === 0 && (
-                <p className="text-sm text-muted text-center py-8">No designations yet. Add one above.</p>
+                <p className="text-sm text-[#8A8AA0] text-center py-8">No designations yet. Add one above.</p>
               )}
             </div>
           </div>
@@ -557,25 +556,29 @@ function ActionMenu({ onView, onEdit, onToggleStatus, onDelete, status }: {
     <div className="relative">
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-ink hover:border-ink/30"
+        className="hr-btn w-8 h-8 flex items-center justify-center text-[#8A8AA0] hover:text-[#1B1B2F]"
       >
         <MoreVertical size={15} />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-9 z-50 w-44 bg-paper border border-line rounded-xl shadow-lg py-1 text-sm">
-            <button onClick={() => { setOpen(false); onView(); }} className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-surface text-ink">
-              <Eye size={14} className="text-muted" /> View Details
+          <div className="absolute right-0 top-9 z-50 w-44 hr-card py-1 text-sm animate-fade-in-up">
+            <button onClick={() => { setOpen(false); onView(); }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-[#E3EDF8] text-[#1B1B2F] transition-colors">
+              <Eye size={14} className="text-[#8A8AA0]" /> View Details
             </button>
-            <button onClick={() => { setOpen(false); onEdit(); }} className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-surface text-ink">
-              <Pencil size={14} className="text-muted" /> Edit
+            <button onClick={() => { setOpen(false); onEdit(); }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-[#E3EDF8] text-[#1B1B2F] transition-colors">
+              <Pencil size={14} className="text-[#8A8AA0]" /> Edit
             </button>
-            <button onClick={() => { setOpen(false); onToggleStatus(); }} className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-surface text-ink">
-              <Power size={14} className="text-muted" /> {status === "active" ? "Deactivate" : "Activate"}
+            <button onClick={() => { setOpen(false); onToggleStatus(); }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-[#E3EDF8] text-[#1B1B2F] transition-colors">
+              <Power size={14} className="text-[#8A8AA0]" /> {status === "active" ? "Deactivate" : "Activate"}
             </button>
-            <div className="border-t border-line my-1" />
-            <button onClick={() => { setOpen(false); onDelete(); }} className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-surface text-danger">
+            <div style={{ borderTop: "1px solid #D8E6F5", margin: "4px 0" }} />
+            <button onClick={() => { setOpen(false); onDelete(); }}
+              className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-red-50 text-red-500 transition-colors">
               <Trash2 size={14} /> Delete
             </button>
           </div>
