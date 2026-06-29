@@ -434,7 +434,8 @@ export default function InvoiceDetailPage() {
           LAYOUT 1 — A4 Full Sheet
       ════════════════════════════════════════════════════════ */}
       {printSize === "a4" && (
-        <div className="print-selected bg-white border border-line rounded-xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+        <div className="print-selected bg-white border border-line rounded-xl shadow-sm overflow-hidden min-w-[600px]">
 
           {/* Header */}
           <div className="flex items-start justify-between p-8 pb-6 border-b border-line">
@@ -622,6 +623,7 @@ export default function InvoiceDetailPage() {
             </div>
           </div>
         </div>
+        </div>
       )}
 
       {/* ════════════════════════════════════════════════════════
@@ -630,7 +632,7 @@ export default function InvoiceDetailPage() {
       {printSize === "half" && (
         <>
           <p className="no-print text-xs text-muted">Preview: A5 / Half A4 (148×210mm)</p>
-          <div style={{ maxWidth: "560px" }}>
+          <div style={{ maxWidth: "560px" }} className="overflow-x-auto">
             <div className="print-selected bg-white border border-line rounded-xl shadow-sm overflow-hidden"
                  style={{ fontSize: "10px", lineHeight: "1.3", color: "#111" }}>
 

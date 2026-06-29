@@ -46,6 +46,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
         : "text-muted hover:text-accent hover:bg-accent-soft"
     }`;
 
+  const pharmLinkClass = (active: boolean) =>
+    `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 select-none ${
+      active
+        ? "ph-nav-active text-white"
+        : "text-muted hover:text-teal-600 hover:bg-teal-50/60"
+    }`;
+
   const close = () => setOpen(false);
 
   const Sidebar = (
@@ -77,9 +84,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted/70">{sec.label}</p>
             {sec.items.map((item) => {
               const Icon = item.icon;
+              const cls = sec.key === "medical" ? pharmLinkClass : linkClass;
               return (
                 <NavLink key={item.path} to={item.path} end={isParentOfNav(item.path)} onClick={close}
-                  className={({ isActive }) => linkClass(isActive)}>
+                  className={({ isActive }) => cls(isActive)}>
                   <Icon size={16} className="flex-shrink-0" />
                   <span className="truncate">{item.label}</span>
                 </NavLink>

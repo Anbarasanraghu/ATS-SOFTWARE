@@ -12,6 +12,7 @@
   "dependencies": {
     "@zxing/browser": "^0.2.0",
     "@zxing/library": "^0.22.0",
+    "framer-motion": "^12.42.0",
     "jsbarcode": "^3.12.3",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",
