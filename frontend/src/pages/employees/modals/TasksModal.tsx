@@ -78,15 +78,15 @@ export function TasksModal({ employeeId, employeeName, employeePhone, onClose }:
 
   const priorityColor = (p: string) =>
     p === "urgent" ? "bg-red-100 text-red-700" : p === "high" ? "bg-orange-100 text-orange-700"
-    : p === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-gray-100 text-gray-600";
+    : p === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-surface-2 text-muted";
   const statusColor = (s: string) =>
     s === "completed" ? "bg-green-100 text-green-700" : s === "in_progress" ? "bg-blue-100 text-blue-700"
-    : s === "cancelled" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600";
+    : s === "cancelled" ? "bg-red-100 text-red-700" : "bg-surface-2 text-muted";
 
   return (
     <>
       <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="bg-surface rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-line">
             <div className="flex items-center gap-2">
               <CheckSquare size={18} className="text-accent" />

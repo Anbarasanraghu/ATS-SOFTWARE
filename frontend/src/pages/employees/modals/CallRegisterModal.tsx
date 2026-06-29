@@ -67,7 +67,7 @@ export function CallRegisterModal({ employeeId, employeeName, employeePhone, onC
   return (
     <>
       <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="bg-surface rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-line">
             <div className="flex items-center gap-2">
               <Phone size={18} className="text-accent" />
@@ -177,7 +177,7 @@ export function CallRegisterModal({ employeeId, employeeName, employeePhone, onC
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium text-sm text-ink">{l.customer_client_name || "Unknown"}</span>
                           {l.call_type && <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">{l.call_type}</span>}
-                          {l.call_status && <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{l.call_status}</span>}
+                          {l.call_status && <span className="text-xs px-2 py-0.5 rounded-full bg-surface-2 text-muted">{l.call_status}</span>}
                         </div>
                         <div className="flex gap-3 mt-1 flex-wrap">
                           <span className="text-xs text-muted">📅 {l.call_date}</span>

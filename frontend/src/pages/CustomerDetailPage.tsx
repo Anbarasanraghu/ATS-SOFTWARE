@@ -5,7 +5,7 @@ import { api, type Customer, type CustomerInvoice, type Interaction } from "../l
 import { money } from "../lib/money";
 
 const STATUS_CLS: Record<string, string> = {
-  draft: "bg-zinc-100 text-zinc-600", sent: "bg-sky-100 text-sky-700",
+  draft: "bg-surface-2 text-muted", sent: "bg-sky-100 text-sky-700",
   paid: "bg-emerald-100 text-emerald-700", void: "bg-red-100 text-red-600",
 };
 const INTERACTION_TYPES = ["note", "call", "email", "meeting", "other"];
@@ -59,19 +59,19 @@ export default function CustomerDetailPage() {
   const totalRevenue = invoices.filter((i) => i.status === "paid").reduce((s, i) => s + i.total, 0);
 
   return (
-    <div className="space-y-6">
-      <button onClick={() => navigate("/customers")} className="flex items-center gap-1 text-sm text-muted hover:text-ink">
+    <div className="scene-3d p-5 sm:p-6 space-y-6">
+      <button onClick={() => navigate("/customers")} className="mono-label text-[11px] flex items-center gap-1 text-muted hover:text-ink">
         <ArrowLeft size={16} /> Customers
       </button>
 
       {/* Header */}
-      <div className="bg-surface border border-line rounded-lg p-6">
+      <div className="card-3d p-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-xl font-bold">{customer.name}</h1>
+            <h1 className="font-dot text-2xl font-extrabold uppercase">{customer.name}</h1>
             {customer.company && <div className="text-muted text-sm mt-0.5">{customer.company}</div>}
           </div>
-          <span className={`rounded-full px-3 py-1 text-xs font-medium ${customer.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-zinc-100 text-zinc-600"}`}>
+          <span className={`rounded-full px-3 py-1 text-xs font-medium ${customer.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-surface-2 text-muted"}`}>
             {customer.status}
           </span>
         </div>
@@ -99,7 +99,7 @@ export default function CustomerDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Invoice history */}
-        <div className="bg-surface border border-line rounded-lg overflow-hidden">
+        <div className="card-3d overflow-hidden">
           <div className="px-4 py-3 border-b border-line flex items-center justify-between">
             <span className="font-semibold text-sm flex items-center gap-2"><FileText size={15} /> Invoices</span>
           </div>
@@ -134,11 +134,11 @@ export default function CustomerDetailPage() {
         </div>
 
         {/* Interaction log */}
-        <div className="bg-surface border border-line rounded-lg overflow-hidden">
+        <div className="card-3d overflow-hidden">
           <div className="px-4 py-3 border-b border-line flex items-center justify-between">
             <span className="font-semibold text-sm">Activity Log</span>
             <button onClick={() => setShowIA(true)}
-              className="flex items-center gap-1 text-xs text-accent hover:underline">
+              className="flex items-center gap-1 text-xs text-black hover:underline">
               <Plus size={12} /> Add note
             </button>
           </div>
@@ -146,20 +146,20 @@ export default function CustomerDetailPage() {
           {showIA && (
             <form onSubmit={addInteraction} className="p-4 border-b border-line space-y-3 bg-paper/40">
               <div className="flex gap-2">
-                <select className="rounded-md border border-line bg-paper px-2 py-1.5 text-sm outline-none focus:border-accent"
+                <select className="rounded-md input-3d px-2 py-1.5 text-sm outline-none focus:border-black"
                   value={newIA.type} onChange={(e) => setNewIA({ ...newIA, type: e.target.value })}>
                   {INTERACTION_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <input className="flex-1 rounded-md border border-line bg-paper px-2 py-1.5 text-sm outline-none focus:border-accent"
+                <input className="flex-1 rounded-md input-3d px-2 py-1.5 text-sm outline-none focus:border-black"
                   placeholder="Subject (optional)" value={newIA.subject}
                   onChange={(e) => setNewIA({ ...newIA, subject: e.target.value })} />
               </div>
-              <textarea required rows={3} className="w-full rounded-md border border-line bg-paper px-2 py-1.5 text-sm outline-none focus:border-accent resize-none"
+              <textarea required rows={3} className="w-full rounded-md input-3d px-2 py-1.5 text-sm outline-none focus:border-black resize-none"
                 placeholder="Notes…" value={newIA.body}
                 onChange={(e) => setNewIA({ ...newIA, body: e.target.value })} />
               <div className="flex gap-2 justify-end">
                 <button type="button" onClick={() => setShowIA(false)} className="px-3 py-1.5 text-sm rounded-md border border-line hover:bg-line/50">Cancel</button>
-                <button type="submit" className="px-3 py-1.5 text-sm rounded-md bg-accent text-white font-medium">Save</button>
+                <button type="submit" className="px-3 py-1.5 text-sm rounded-md bg-black text-white font-medium">Save</button>
               </div>
             </form>
           )}

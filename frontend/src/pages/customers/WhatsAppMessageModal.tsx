@@ -239,7 +239,7 @@ export default function WhatsAppMessageModal({ customer, onClose }: Props) {
       <div className="absolute inset-0" onClick={onClose} />
 
       <div
-        className="relative bg-surface border border-line rounded-2xl w-full max-w-[660px] shadow-2xl flex flex-col max-h-[92vh]"
+        className="relative card-3d rounded-2xl w-full max-w-[660px] shadow-2xl flex flex-col max-h-[92vh]"
         onClick={e => e.stopPropagation()}>
 
         {/* ── Header ── */}
@@ -271,20 +271,20 @@ export default function WhatsAppMessageModal({ customer, onClose }: Props) {
               <label className="block text-[11px] font-semibold text-muted uppercase tracking-wide mb-1.5">
                 Customer Name
               </label>
-              <div className="flex items-center gap-2 rounded-lg border border-line bg-paper/60 px-3 py-2.5 text-sm">
+              <div className="flex items-center gap-2 rounded-lg input-3d/60 px-3 py-2.5 text-sm">
                 <span className="flex-1 truncate text-ink font-medium">{customer.name}</span>
-                <span className="text-[10px] text-muted bg-zinc-100 px-1.5 py-0.5 rounded flex-shrink-0">readonly</span>
+                <span className="text-[10px] text-muted bg-surface-2 px-1.5 py-0.5 rounded flex-shrink-0">readonly</span>
               </div>
             </div>
             <div>
               <label className="block text-[11px] font-semibold text-muted uppercase tracking-wide mb-1.5">
                 Phone Number
               </label>
-              <div className="flex items-center gap-2 rounded-lg border border-line bg-paper/60 px-3 py-2.5 text-sm">
+              <div className="flex items-center gap-2 rounded-lg input-3d/60 px-3 py-2.5 text-sm">
                 {hasPhone
                   ? <span className="flex-1 font-mono text-ink">{rawPhone}</span>
                   : <span className="flex-1 text-danger text-xs">No phone number</span>}
-                <span className="text-[10px] text-muted bg-zinc-100 px-1.5 py-0.5 rounded flex-shrink-0">readonly</span>
+                <span className="text-[10px] text-muted bg-surface-2 px-1.5 py-0.5 rounded flex-shrink-0">readonly</span>
               </div>
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function WhatsAppMessageModal({ customer, onClose }: Props) {
               Select Message Type
             </label>
             <select
-              className="w-full rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all cursor-pointer"
+              className="w-full rounded-lg input-3d px-3 py-2.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all cursor-pointer"
               value={msgType}
               onChange={e => setMsgType(e.target.value as MsgType)}>
               {MSG_TYPES.map(t => (
@@ -316,7 +316,7 @@ export default function WhatsAppMessageModal({ customer, onClose }: Props) {
             <div className={`flex items-start gap-2.5 rounded-xl border px-4 py-3 text-xs ${
               payment
                 ? "bg-amber-50 border-amber-200 text-amber-800"
-                : "bg-zinc-50 border-zinc-200 text-zinc-600"
+                : "bg-surface-2 border-line text-muted"
             }`}>
               <span className="text-base leading-none mt-0.5">{payment ? "💰" : "ℹ️"}</span>
               <span>
@@ -344,7 +344,7 @@ export default function WhatsAppMessageModal({ customer, onClose }: Props) {
             </div>
 
             {loadingData ? (
-              <div className="rounded-xl border border-line bg-paper/60 px-4 py-10 flex flex-col items-center justify-center gap-3">
+              <div className="rounded-xl input-3d/60 px-4 py-10 flex flex-col items-center justify-center gap-3">
                 <div className="w-6 h-6 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
                 <p className="text-xs text-muted">Loading customer data…</p>
               </div>
@@ -352,7 +352,7 @@ export default function WhatsAppMessageModal({ customer, onClose }: Props) {
               <textarea
                 ref={textareaRef}
                 rows={11}
-                className="w-full rounded-xl border border-line bg-paper px-4 py-3.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 resize-none leading-relaxed transition-all"
+                className="w-full rounded-xl input-3d px-4 py-3.5 text-sm outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 resize-none leading-relaxed transition-all"
                 value={message}
                 onChange={e => setMessage(e.target.value)}
                 placeholder={msgType === "custom" ? "Type your custom message here…" : ""}
@@ -373,7 +373,7 @@ export default function WhatsAppMessageModal({ customer, onClose }: Props) {
                   type="button"
                   onClick={() => insertVariable(v.key)}
                   disabled={loadingData}
-                  className="inline-flex items-center px-2.5 py-1 rounded-md border border-line bg-paper text-[11px] text-muted hover:text-accent hover:border-accent/50 hover:bg-accent-soft transition-colors font-mono disabled:opacity-40 disabled:cursor-not-allowed">
+                  className="inline-flex items-center px-2.5 py-1 rounded-md input-3d text-[11px] text-muted hover:text-black hover:border-black/50 hover:bg-neutral-100 transition-colors font-mono disabled:opacity-40 disabled:cursor-not-allowed">
                   {"{{"}{v.label}{"}}"}
                 </button>
               ))}

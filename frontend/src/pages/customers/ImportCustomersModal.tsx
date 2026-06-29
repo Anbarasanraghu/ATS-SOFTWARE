@@ -119,12 +119,12 @@ export default function ImportCustomersModal({ onClose, onImported }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface border border-line rounded-lg w-full max-w-lg shadow-xl">
+      <div className="card-3d w-full max-w-lg shadow-xl">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-line">
           <div className="flex items-center gap-2">
-            <FileSpreadsheet size={16} className="text-accent" />
+            <FileSpreadsheet size={16} className="text-black" />
             <div>
               <h2 className="font-semibold text-ink">Import Customers</h2>
               <p className="text-xs text-muted mt-0.5">Upload an Excel (.xlsx) or CSV file</p>
@@ -136,13 +136,13 @@ export default function ImportCustomersModal({ onClose, onImported }: Props) {
         <div className="px-5 py-4 space-y-4">
 
           {/* Template download */}
-          <div className="flex items-center justify-between bg-accent-soft rounded-lg px-4 py-3">
+          <div className="flex items-center justify-between bg-neutral-100 rounded-lg px-4 py-3">
             <div>
-              <p className="text-sm font-medium text-accent">Download Import Template</p>
+              <p className="text-sm font-medium text-black">Download Import Template</p>
               <p className="text-xs text-muted mt-0.5">Use this template to format your data correctly</p>
             </div>
             <button onClick={downloadTemplate}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent text-white text-xs font-medium">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black text-white text-xs font-medium">
               <Download size={13} /> Template
             </button>
           </div>
@@ -153,7 +153,7 @@ export default function ImportCustomersModal({ onClose, onImported }: Props) {
               onDrop={handleDrop}
               onDragOver={e => e.preventDefault()}
               onClick={() => fileRef.current?.click()}
-              className="border-2 border-dashed border-line rounded-lg p-6 text-center cursor-pointer hover:border-accent hover:bg-accent-soft/30 transition-colors">
+              className="border-2 border-dashed border-line rounded-lg p-6 text-center cursor-pointer hover:border-black hover:bg-neutral-100/30 transition-colors">
               <Upload size={24} className="mx-auto text-muted/60 mb-2" />
               {file ? (
                 <div>
@@ -218,7 +218,7 @@ export default function ImportCustomersModal({ onClose, onImported }: Props) {
                 <span>{pct}%</span>
               </div>
               <div className="h-2 bg-line rounded-full overflow-hidden">
-                <div className="h-full bg-accent transition-all duration-300 rounded-full" style={{ width: `${pct}%` }} />
+                <div className="h-full bg-black transition-all duration-300 rounded-full" style={{ width: `${pct}%` }} />
               </div>
               {progress.errors > 0 && (
                 <p className="text-xs text-amber-600">{progress.errors} row{progress.errors !== 1 ? "s" : ""} failed to import</p>
@@ -248,7 +248,7 @@ export default function ImportCustomersModal({ onClose, onImported }: Props) {
           </button>
           {rows.length > 0 && !done && (
             <button onClick={handleImport} disabled={importing}
-              className="px-4 py-2 text-sm rounded-md bg-accent text-white font-medium disabled:opacity-60 flex items-center gap-2">
+              className="px-4 py-2 text-sm rounded-md bg-black text-white font-medium disabled:opacity-60 flex items-center gap-2">
               <Upload size={14} />
               {importing ? `Importing… (${pct}%)` : `Import ${rows.length} Customers`}
             </button>

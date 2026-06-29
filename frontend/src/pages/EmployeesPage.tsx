@@ -13,7 +13,7 @@ import { exportEmployees, exportEmployeeReport } from "./employees/excelUtils";
 const STATUS_BADGE: Record<string, string> = {
   active:     "bg-emerald-100 text-emerald-700",
   on_leave:   "bg-amber-100 text-amber-700",
-  inactive:   "bg-gray-100 text-gray-600",
+  inactive:   "bg-surface-2 text-muted",
   terminated: "bg-red-100 text-red-600",
 };
 
@@ -213,7 +213,7 @@ export default function EmployeesPage() {
           onClick={() => { setTab("employees"); setStatusFilter("on_leave"); }}
         />
         <StatCard
-          label="Inactive" value={stats.inactive} icon={UserX} color="bg-gray-100 text-gray-500"
+          label="Inactive" value={stats.inactive} icon={UserX} color="bg-surface-2 text-muted"
           active={tab === "employees" && statusFilter === "inactive"}
           onClick={() => { setTab("employees"); setStatusFilter("inactive"); }}
         />
@@ -332,7 +332,7 @@ export default function EmployeesPage() {
                         {e.hire_date ? new Date(e.hire_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_BADGE[e.status] ?? "bg-gray-100 text-gray-600"}`}>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_BADGE[e.status] ?? "bg-surface-2 text-muted"}`}>
                           {e.status.replace("_", " ").toUpperCase()}
                         </span>
                       </td>

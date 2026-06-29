@@ -5,7 +5,7 @@ import { api, type Product } from "../lib/api";
 import { money } from "../lib/money";
 import ScanInput from "../components/ScanInput";
 
-const inputCls = "rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+const inputCls = "rounded-xl neu-inset px-3 py-2 text-sm outline-none focus:border-accent";
 
 // Generate a valid 13-digit EAN-13 barcode (in-store prefix 200).
 function genEan13(used: Set<string>): string {
@@ -100,7 +100,7 @@ export default function BarcodeLabelsPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="neu-scene p-5 sm:p-6 space-y-6">
       <style>{`@media print {
         body * { visibility: hidden !important; }
         #label-sheet, #label-sheet * { visibility: visible !important; }
@@ -136,7 +136,7 @@ export default function BarcodeLabelsPage() {
         {/* Picker + barcode assignment */}
         <div className="no-print space-y-3">
           <input className={`${inputCls} w-full`} placeholder="Search name / SKU / barcode…" value={search} onChange={(e) => setSearch(e.target.value)} />
-          <div className="bg-surface border border-line rounded-lg divide-y divide-line max-h-[62vh] overflow-y-auto">
+          <div className="neu rounded-2xl divide-y divide-line max-h-[62vh] overflow-y-auto">
             {filtered.length === 0 && <p className="px-4 py-3 text-sm text-muted">No products.</p>}
             {filtered.map((p) => {
               const code = p.barcode || p.sku;
@@ -172,7 +172,7 @@ export default function BarcodeLabelsPage() {
         </div>
 
         {/* Preview / print sheet */}
-        <div id="label-sheet" className="bg-surface border border-line rounded-lg p-4">
+        <div id="label-sheet" className="neu rounded-2xl p-4">
           {labels.length === 0 ? (
             <p className="text-sm text-muted no-print">Set a quantity on products (with a barcode) to preview labels.</p>
           ) : (

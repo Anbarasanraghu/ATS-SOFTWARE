@@ -39,7 +39,7 @@ function isMissed(c: Customer) {
 function StatusBadge({ value }: { value: string }) {
   const s = CRM_STATUSES.find(x => x.value === value);
   return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${s?.cls ?? "bg-zinc-100 text-zinc-500"}`}>
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${s?.cls ?? "bg-surface-2 text-muted"}`}>
       {s?.label ?? value}
     </span>
   );
@@ -48,7 +48,7 @@ function StatusBadge({ value }: { value: string }) {
 function PriorityBadge({ value }: { value: string }) {
   const p = PRIORITIES.find(x => x.value === value);
   return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${p?.cls ?? "bg-zinc-100 text-zinc-500"}`}>
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${p?.cls ?? "bg-surface-2 text-muted"}`}>
       {p?.label ?? value}
     </span>
   );
@@ -58,7 +58,7 @@ function fmtDate(d: string | null | undefined) {
   if (!d) return <span className="text-muted">—</span>;
   const dt = new Date(d);
   const t = today();
-  if (d === t) return <span className="text-accent font-medium">Today</span>;
+  if (d === t) return <span className="text-black font-medium">Today</span>;
   if (d < t) return <span className="text-danger">{dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</span>;
   return <span>{dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" })}</span>;
 }
@@ -80,8 +80,8 @@ function StatCard({
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left bg-surface border rounded-xl p-5 flex items-center gap-4 transition-all ${
-        active ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-accent/40 hover:shadow-sm"
+      className={`card-3d w-full text-left p-5 flex items-center gap-4 ${
+        active ? "ring-2 ring-black/20" : ""
       } ${onClick ? "cursor-pointer" : "cursor-default"}`}>
       <div className={`rounded-xl p-3 flex-shrink-0 ${accent}`}><Icon size={20} /></div>
       <div className="min-w-0">
@@ -112,10 +112,10 @@ function PipelineView({ customers }: { customers: Customer[] }) {
   const counts = Object.fromEntries(CRM_STATUSES.map(s => [s.value, customers.filter(c => c.crm_status === s.value).length]));
   const maxCount = Math.max(...PIPELINE_STAGES.map(s => counts[s.value] ?? 0), 1);
   return (
-    <div className="bg-surface border border-line rounded-xl p-5">
+    <div className="card-3d p-5">
       <div className="flex items-center justify-between mb-5">
         <h3 className="text-sm font-semibold text-ink flex items-center gap-2">
-          <BarChart3 size={15} className="text-accent" /> Sales Pipeline
+          <BarChart3 size={15} className="text-black" /> Sales Pipeline
         </h3>
         <span className="text-xs text-muted">Conversion rate: <strong className="text-ink">
           {customers.length > 0 ? Math.round(((counts["converted"] ?? 0) / customers.length) * 100) : 0}%
@@ -203,20 +203,20 @@ function ExportDropdown({ filtered, exportingReport, setExportingReport }: {
   return (
     <div className="relative" ref={ref}>
       <button onClick={() => setOpen(v => !v)} disabled={exportingReport}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-line bg-paper text-ink text-sm hover:bg-line/40 disabled:opacity-60">
+        className="flex items-center gap-1.5 px-3 py-2 rounded-md input-3d text-ink text-sm hover:bg-line/40 disabled:opacity-60">
         <Download size={14} />
         {exportingReport ? "Exporting…" : "Export"}
         <ChevronDown size={13} className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 bg-surface border border-line rounded-xl shadow-xl py-1.5 z-30 min-w-[210px]">
+        <div className="absolute right-0 top-full mt-1.5 card-3d shadow-xl py-1.5 z-30 min-w-[210px]">
           <button onClick={() => { exportCustomers(filtered); setOpen(false); }}
             className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink hover:bg-paper w-full text-left">
-            <Users size={14} className="text-accent" /> Export Customers (.xlsx)
+            <Users size={14} className="text-black" /> Export Customers (.xlsx)
           </button>
           <button onClick={() => { setOpen(false); exportFollowupReport(setExportingReport); }}
             className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-ink hover:bg-paper w-full text-left">
-            <FileText size={14} className="text-accent" /> Export Follow-up Report
+            <FileText size={14} className="text-black" /> Export Follow-up Report
           </button>
         </div>
       )}
@@ -243,7 +243,7 @@ function RowMenu({ customer, onConvert, onLost, onDelete }: {
         <MoreVertical size={14} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 bg-surface border border-line rounded-xl shadow-xl py-1.5 z-30 min-w-[170px]">
+        <div className="absolute right-0 top-full mt-1 card-3d shadow-xl py-1.5 z-30 min-w-[170px]">
           {customer.crm_status !== "converted" && (
             <button onClick={() => { setOpen(false); onConvert(); }}
               className="flex items-center gap-2.5 px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50 w-full text-left">
@@ -274,8 +274,8 @@ type SortField = "name" | "next_followup_date" | "last_followup_date" | "crm_sta
 function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: "asc" | "desc" }) {
   if (field !== sortField) return <ChevronsUpDown size={11} className="text-muted/40 ml-0.5" />;
   return sortDir === "asc"
-    ? <ChevronUp size={11} className="text-accent ml-0.5" />
-    : <ChevronDown size={11} className="text-accent ml-0.5" />;
+    ? <ChevronUp size={11} className="text-black ml-0.5" />
+    : <ChevronDown size={11} className="text-black ml-0.5" />;
 }
 
 const PRIORITY_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -364,7 +364,7 @@ function PaymentFollowupPanel({
   }
 
   return (
-    <div className="bg-surface border border-line rounded-xl overflow-hidden">
+    <div className="card-3d overflow-hidden">
 
       {/* Panel header + stats */}
       <div className="px-5 py-4 border-b border-line bg-paper/60 space-y-4">
@@ -380,7 +380,7 @@ function PaymentFollowupPanel({
             )}
           </div>
           <button onClick={exportReport} disabled={exporting || filtered.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-line bg-paper text-ink text-xs hover:bg-line/40 disabled:opacity-50">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md input-3d text-ink text-xs hover:bg-line/40 disabled:opacity-50">
             <Download size={12} /> {exporting ? "Exporting…" : "Export Excel"}
           </button>
         </div>
@@ -395,9 +395,9 @@ function PaymentFollowupPanel({
             <p className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wide">Total Paid</p>
             <p className="text-2xl font-bold text-emerald-800 mt-1 leading-none">{fmt(totalPaid)}</p>
           </div>
-          <div className={`rounded-xl border px-4 py-3 ${totalBalance > 0 ? "bg-amber-50 border-amber-200" : "bg-zinc-50 border-zinc-100"}`}>
-            <p className={`text-[11px] font-semibold uppercase tracking-wide ${totalBalance > 0 ? "text-amber-600" : "text-zinc-500"}`}>Pending Balance</p>
-            <p className={`text-2xl font-bold mt-1 leading-none ${totalBalance > 0 ? "text-amber-800" : "text-zinc-500"}`}>{fmt(totalBalance)}</p>
+          <div className={`rounded-xl border px-4 py-3 ${totalBalance > 0 ? "bg-amber-50 border-amber-200" : "bg-surface-2 border-line"}`}>
+            <p className={`text-[11px] font-semibold uppercase tracking-wide ${totalBalance > 0 ? "text-amber-600" : "text-muted"}`}>Pending Balance</p>
+            <p className={`text-2xl font-bold mt-1 leading-none ${totalBalance > 0 ? "text-amber-800" : "text-muted"}`}>{fmt(totalBalance)}</p>
           </div>
           <div className="rounded-xl border bg-purple-50 border-purple-100 px-4 py-3">
             <p className="text-[11px] font-semibold text-purple-600 uppercase tracking-wide">Records</p>
@@ -407,17 +407,17 @@ function PaymentFollowupPanel({
 
         {/* Search + status filter */}
         <div className="flex items-center gap-2">
-          <input className="rounded-md border border-line bg-paper px-3 py-1.5 text-sm outline-none focus:border-accent w-60"
+          <input className="rounded-md input-3d px-3 py-1.5 text-sm outline-none focus:border-black w-60"
             placeholder="Search customer, invoice, phone…"
             value={search} onChange={e => setSearch(e.target.value)} />
-          <select className="rounded-md border border-line bg-paper px-3 py-1.5 text-sm outline-none focus:border-accent"
+          <select className="rounded-md input-3d px-3 py-1.5 text-sm outline-none focus:border-black"
             value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
             <option value="">All Payment Statuses</option>
             {PAYMENT_STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
           {(search || filterStatus) && (
             <button onClick={() => { setSearch(""); setFilterStatus(""); }}
-              className="text-xs text-accent hover:underline flex items-center gap-1">
+              className="text-xs text-black hover:underline flex items-center gap-1">
               <X size={11} /> Clear
             </button>
           )}
@@ -428,7 +428,7 @@ function PaymentFollowupPanel({
       {/* Table */}
       {loading ? (
         <div className="p-10 text-center">
-          <div className="inline-block w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin mb-2" />
+          <div className="inline-block w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin mb-2" />
           <p className="text-sm text-muted">Loading payment records…</p>
         </div>
       ) : filtered.length === 0 ? (
@@ -458,7 +458,7 @@ function PaymentFollowupPanel({
             </thead>
             <tbody className="divide-y divide-line/50">
               {filtered.map(r => {
-                const statusCls = PAYMENT_STATUS_COLORS[r.payment_status] ?? "bg-zinc-50 text-zinc-600 border-zinc-200";
+                const statusCls = PAYMENT_STATUS_COLORS[r.payment_status] ?? "bg-surface-2 text-muted border-line";
                 const statusLabel = PAYMENT_STATUSES.find(s => s.value === r.payment_status)?.label ?? r.payment_status;
                 const isOverdue = r.next_payment_followup_date && r.next_payment_followup_date < t && r.payment_status !== "payment_completed";
                 const customer = customers.find(c => c.id === r.customer_id);
@@ -470,7 +470,7 @@ function PaymentFollowupPanel({
                     </td>
                     <td className="px-4 py-3.5">
                       {r.invoice_number
-                        ? <span className="font-mono text-[12px] bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded border border-zinc-200">{r.invoice_number}</span>
+                        ? <span className="font-mono text-[12px] bg-surface-2 text-ink-soft px-2 py-0.5 rounded border border-line">{r.invoice_number}</span>
                         : <span className="text-muted text-xs">—</span>}
                     </td>
                     <td className="px-4 py-3.5 text-right font-medium text-ink text-[13px] tabular-nums">
@@ -514,7 +514,7 @@ function PaymentFollowupPanel({
                         )}
                         {r.customer_phone && (
                           <a href={`tel:${r.customer_phone}`} title="Call"
-                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-soft transition-colors">
+                            className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-black hover:border-black/40 hover:bg-neutral-100 transition-colors">
                             <PhoneCall size={14} />
                           </a>
                         )}
@@ -649,8 +649,8 @@ export default function CustomersPage() {
 
   function handleFollowupSaved(_: CustomerFollowup) { setFollowupTarget(null); void refresh(); }
 
-  const selCls = "rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
-  const inputCls = "rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+  const selCls = "rounded-md input-3d px-3 py-2 text-sm outline-none focus:border-black";
+  const inputCls = "rounded-md input-3d px-3 py-2 text-sm outline-none focus:border-black";
   const showReminder = !reminderDismissed && (stats.missed > 0 || stats.todayFollowups > 0);
 
   // Sortable header helper
@@ -667,16 +667,18 @@ export default function CustomersPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="scene-3d p-5 sm:p-6 space-y-5">
 
       {/* ── ROW 1: Title + Primary action ── */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-ink">Customers &amp; Follow Ups</h1>
-          <p className="text-sm text-muted mt-1">Manage customers, leads, follow-ups, and conversion pipeline</p>
+          <h1 className="font-dot text-3xl font-extrabold flex items-center gap-2 bg-gradient-to-br from-ink via-ink to-muted bg-clip-text text-transparent drop-shadow-sm">
+            Customers <span className="nothing-accent">●</span>
+          </h1>
+          <p className="mono-label text-[11px] text-muted mt-1.5">Leads · Follow-ups · Pipeline</p>
         </div>
         <button onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-lg bg-accent text-white px-5 py-2.5 text-sm font-semibold shadow-sm hover:bg-accent/90 flex-shrink-0">
+          className="flex items-center gap-2 rounded-lg bg-black text-white px-5 py-2.5 text-sm font-semibold shadow-sm hover:bg-black/90 flex-shrink-0">
           <Plus size={16} /> New Customer
         </button>
       </div>
@@ -692,22 +694,22 @@ export default function CustomersPage() {
         </button>
         <button onClick={() => setShowPipeline(v => !v)}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-md border text-sm transition-colors ${
-            showPipeline ? "border-accent bg-accent-soft text-accent" : "border-line bg-paper text-ink hover:bg-line/40"}`}>
+            showPipeline ? "border-black bg-neutral-100 text-black" : "border-line bg-paper text-ink hover:bg-line/40"}`}>
           <BarChart3 size={14} /> Pipeline
         </button>
         <button onClick={() => setShowFilters(v => !v)}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-md border text-sm transition-colors ${
-            showFilters ? "border-accent bg-accent-soft text-accent" : "border-line bg-paper text-ink hover:bg-line/40"}`}>
+            showFilters ? "border-black bg-neutral-100 text-black" : "border-line bg-paper text-ink hover:bg-line/40"}`}>
           <Filter size={14} /> Filters
           {activeFilterCount > 0 && (
-            <span className="ml-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-accent text-white text-[10px] font-bold">
+            <span className="ml-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-black text-white text-[10px] font-bold">
               {activeFilterCount}
             </span>
           )}
         </button>
         <div className="flex-1" />
         <button onClick={() => setShowImport(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-line bg-paper text-ink text-sm hover:bg-line/40">
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md input-3d text-ink text-sm hover:bg-line/40">
           <Upload size={14} /> Import Excel
         </button>
         <ExportDropdown filtered={filtered} exportingReport={exportingReport} setExportingReport={setExportingReport} />
@@ -732,7 +734,7 @@ export default function CustomersPage() {
       <div className="grid grid-cols-5 gap-3">
         <StatCard label="Total Customers" value={stats.total} icon={Users} accent="bg-blue-50 text-blue-600"
           onClick={hasFilters ? resetFilters : undefined} active={!hasFilters && customers.length > 0} />
-        <StatCard label="Today Follow-ups" value={stats.todayFollowups} icon={Calendar} accent="bg-accent-soft text-accent"
+        <StatCard label="Today Follow-ups" value={stats.todayFollowups} icon={Calendar} accent="bg-neutral-100 text-black"
           onClick={() => setFilterDate(filterDate === t ? "" : t)} active={filterDate === t} />
         <StatCard label="Pending Follow-ups" value={stats.pending} icon={Clock} accent="bg-orange-50 text-orange-600"
           onClick={() => setFilterStatus(filterStatus === "all_pending" ? "" : "all_pending")}
@@ -740,7 +742,7 @@ export default function CustomersPage() {
         <StatCard label="Converted" value={stats.converted} icon={TrendingUp} accent="bg-emerald-50 text-emerald-700"
           onClick={() => setFilterStatus(filterStatus === "converted" ? "" : "converted")} active={filterStatus === "converted"} />
         <StatCard label="Missed Follow-ups" value={stats.missed} icon={AlertCircle}
-          accent={stats.missed > 0 ? "bg-red-50 text-red-600" : "bg-zinc-50 text-zinc-400"}
+          accent={stats.missed > 0 ? "bg-red-50 text-red-600" : "bg-surface-2 text-muted"}
           onClick={() => setFilterStatus(filterStatus === "missed" ? "" : "missed")} active={filterStatus === "missed"} />
       </div>
 
@@ -759,7 +761,7 @@ export default function CustomersPage() {
 
       {/* ── Filter Panel ── */}
       {showFilters && (
-        <div className="bg-surface border border-line rounded-xl p-5">
+        <div className="card-3d p-5">
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-xs font-semibold text-muted uppercase tracking-wide block mb-1.5">Status</label>
@@ -811,7 +813,7 @@ export default function CustomersPage() {
       )}
 
       {/* ── Customer Table ── */}
-      <div className="bg-surface border border-line rounded-xl overflow-hidden">
+      <div className="card-3d overflow-hidden">
 
         {/* Table top bar */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-line bg-paper/60">
@@ -819,12 +821,12 @@ export default function CustomersPage() {
             {filtered.length} {filtered.length === 1 ? "customer" : "customers"}
             {hasFilters && <span className="text-muted font-normal"> (filtered)</span>}
           </span>
-          {hasFilters && <button onClick={resetFilters} className="text-xs text-accent hover:underline">Clear filters</button>}
+          {hasFilters && <button onClick={resetFilters} className="text-xs text-black hover:underline">Clear filters</button>}
         </div>
 
         {loading ? (
           <div className="p-10 text-center">
-            <div className="inline-block w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin mb-3" />
+            <div className="inline-block w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin mb-3" />
             <p className="text-sm text-muted">Loading customers…</p>
           </div>
         ) : filtered.length === 0 ? (
@@ -834,12 +836,12 @@ export default function CustomersPage() {
               {customers.length === 0 ? "No customers yet." : "No customers match the current filters."}
             </p>
             {customers.length === 0 && (
-              <button onClick={() => setShowCreate(true)} className="mt-3 text-sm text-accent hover:underline">
+              <button onClick={() => setShowCreate(true)} className="mt-3 text-sm text-black hover:underline">
                 Add your first customer →
               </button>
             )}
             {hasFilters && (
-              <button onClick={resetFilters} className="mt-2 text-sm text-accent hover:underline block mx-auto">Reset filters</button>
+              <button onClick={resetFilters} className="mt-2 text-sm text-black hover:underline block mx-auto">Reset filters</button>
             )}
           </div>
         ) : (
@@ -870,7 +872,7 @@ export default function CustomersPage() {
 
                         <td className="px-5 py-3.5">
                           <button onClick={() => setViewing(c)}
-                            className="font-semibold text-ink hover:text-accent text-left block leading-tight">
+                            className="font-semibold text-ink hover:text-black text-left block leading-tight">
                             {c.name}
                           </button>
                           {c.company && <p className="text-xs text-muted mt-0.5">{c.company}</p>}
@@ -905,16 +907,16 @@ export default function CustomersPage() {
                         <td className="px-3 py-3.5">
                           <div className="flex items-center gap-1 justify-end">
                             <button onClick={() => setViewing(c)} title="View"
-                              className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-soft transition-colors"><Eye size={14} /></button>
+                              className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-black hover:border-black/40 hover:bg-neutral-100 transition-colors"><Eye size={14} /></button>
                             <button onClick={() => setEditing(c)} title="Edit"
-                              className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-soft transition-colors"><PenLine size={14} /></button>
+                              className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-black hover:border-black/40 hover:bg-neutral-100 transition-colors"><PenLine size={14} /></button>
                             <button onClick={() => setFollowupTarget(c)} title="Add Follow-up"
-                              className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-soft transition-colors"><CalendarPlus size={14} /></button>
+                              className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-black hover:border-black/40 hover:bg-neutral-100 transition-colors"><CalendarPlus size={14} /></button>
                             <button onClick={() => setPaymentFollowupTarget(c)} title="Payment Follow-up"
                               className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-amber-600 hover:border-amber-300 hover:bg-amber-50 transition-colors"><Banknote size={14} /></button>
                             {c.phone && (
                               <a href={`tel:${c.phone}`} title="Call"
-                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-accent hover:border-accent/40 hover:bg-accent-soft transition-colors"><PhoneCall size={14} /></a>
+                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-line/60 text-muted hover:text-black hover:border-black/40 hover:bg-neutral-100 transition-colors"><PhoneCall size={14} /></a>
                             )}
                             {(c.whatsapp || c.phone) && (
                               <button onClick={() => setWhatsappTarget(c)} title="Send WhatsApp Message"
@@ -945,7 +947,7 @@ export default function CustomersPage() {
 
               <div className="flex items-center gap-3">
                 <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}
-                  className="rounded-md border border-line bg-paper px-2 py-1 text-xs outline-none focus:border-accent">
+                  className="rounded-md input-3d px-2 py-1 text-xs outline-none focus:border-black">
                   {PAGE_SIZES.map(s => <option key={s} value={s}>{s} / page</option>)}
                 </select>
 
@@ -964,7 +966,7 @@ export default function CustomersPage() {
                     return (
                       <button key={p} onClick={() => setPage(p)}
                         className={`w-7 h-7 rounded text-xs border transition-colors ${
-                          p === page ? "bg-accent text-white border-accent font-semibold" : "border-line hover:bg-line/50 text-muted"
+                          p === page ? "bg-black text-white border-black font-semibold" : "border-line hover:bg-line/50 text-muted"
                         }`}>{p}</button>
                     );
                   })}

@@ -10,6 +10,7 @@ Auth: standard Google AI Studio keys look like ``AIzaSy...`` and go in the
 """
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import httpx
@@ -17,6 +18,8 @@ import httpx
 from app.core.config import settings
 
 _BASE = "https://generativelanguage.googleapis.com/v1beta"
+# Transient server-side errors worth retrying (overloaded / hiccup / timeout).
+_TRANSIENT = {500, 502, 503, 504}
 
 
 class GeminiError(RuntimeError):
@@ -59,33 +62,57 @@ async def generate(
         body["tools"] = [{"functionDeclarations": tools}]
         body["toolConfig"] = {"functionCallingConfig": {"mode": "AUTO"}}
 
-    url = f"{_BASE}/models/{settings.gemini_model}:generateContent"
-    url, headers = _auth(url)
+    # Try the primary model, then any fallbacks. Each model gets retries with
+    # exponential backoff on transient (overloaded) errors so a momentary 503
+    # recovers on its own instead of surfacing to the user.
+    models = [settings.gemini_model] + [
+        m.strip() for m in (settings.gemini_fallback_models or "").split(",")
+        if m.strip() and m.strip() != settings.gemini_model
+    ]
+    max_retries = max(1, settings.gemini_max_retries)
+    last_status, last_detail = None, ""
 
-    try:
-        async with httpx.AsyncClient(timeout=60) as client:
-            resp = await client.post(url, json=body, headers=headers)
-    except httpx.HTTPError as exc:
-        raise GeminiError(f"Could not reach Gemini API: {exc}") from exc
+    async with httpx.AsyncClient(timeout=60) as client:
+        for model in models:
+            url, headers = _auth(f"{_BASE}/models/{model}:generateContent")
+            delay = 0.8
+            for attempt in range(max_retries):
+                try:
+                    resp = await client.post(url, json=body, headers=headers)
+                except httpx.HTTPError as exc:
+                    last_status, last_detail = None, f"network error: {exc}"
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(delay); delay *= 2; continue
+                    break
 
-    if resp.status_code != 200:
-        detail = resp.text
-        try:
-            detail = resp.json().get("error", {}).get("message", detail)
-        except Exception:
-            pass
-        raise GeminiError(f"Gemini API error ({resp.status_code}): {detail}")
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates") or []
+                    if not candidates:
+                        last_detail = f"blocked/empty {data.get('promptFeedback', {})}"
+                        break  # content issue — a different model won't help
+                    content = candidates[0].get("content")
+                    if not content:
+                        last_detail = f"empty (finishReason={candidates[0].get('finishReason', 'unknown')})"
+                        break
+                    return content
 
-    data = resp.json()
-    candidates = data.get("candidates") or []
-    if not candidates:
-        fb = data.get("promptFeedback", {})
-        raise GeminiError(f"Gemini returned no candidates. {fb}")
-    content = candidates[0].get("content")
-    if not content:
-        reason = candidates[0].get("finishReason", "unknown")
-        raise GeminiError(f"Gemini returned an empty response (finishReason={reason}).")
-    return content
+                # Non-200: capture detail, retry transient, else move to next model.
+                try:
+                    last_detail = resp.json().get("error", {}).get("message", resp.text)
+                except Exception:
+                    last_detail = resp.text
+                last_status = resp.status_code
+                if resp.status_code in _TRANSIENT and attempt < max_retries - 1:
+                    await asyncio.sleep(delay); delay *= 2; continue
+                break  # non-transient (404/429/400) or out of retries → next model
+
+    if last_status in _TRANSIENT or last_status is None:
+        raise GeminiError(
+            "The assistant is busy right now (the AI model is temporarily overloaded). "
+            "Please try again in a few seconds."
+        )
+    raise GeminiError(f"Gemini API error ({last_status}): {last_detail}")
 
 
 def split_parts(content: dict) -> tuple[str, list[dict]]:

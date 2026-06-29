@@ -9,7 +9,7 @@ type LogEntry = {
   newStock: number; status: "in" | "out" | "added" | "error"; msg?: string; at: string;
 };
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()));
-const inputCls = "mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+const inputCls = "mt-1 w-full rounded-xl neu-inset px-3 py-2 text-sm outline-none focus:border-accent";
 
 export default function ScanStockPage() {
   const [mode, setMode] = useState<"in" | "out">("in");
@@ -65,7 +65,7 @@ export default function ScanStockPage() {
   const totalOut = log.filter((x) => x.status === "out").reduce((s, x) => s + Math.abs(x.delta), 0);
 
   return (
-    <div className="space-y-5 max-w-3xl mx-auto">
+    <div className="neu-scene p-5 sm:p-6 space-y-5 max-w-3xl mx-auto">
       <h1 className="text-xl font-semibold">Scan Stock</h1>
 
       {/* Mode + quantity */}
@@ -82,7 +82,7 @@ export default function ScanStockPage() {
         </div>
         <label className="flex items-center gap-2 text-sm text-muted">
           Qty per scan
-          <input type="number" min="0.001" step="0.001" className="w-20 rounded-md border border-line bg-paper px-2 py-2 text-sm text-right" value={qty} onChange={(e) => setQty(e.target.value)} />
+          <input type="number" min="0.001" step="0.001" className="w-20 rounded-xl neu-inset px-2 py-2 text-sm text-right" value={qty} onChange={(e) => setQty(e.target.value)} />
         </label>
         <div className="ml-auto text-xs text-muted">In: <b className="text-emerald-600">{totalIn}</b> · Out: <b className="text-amber-600">{totalOut}</b></div>
       </div>
@@ -141,7 +141,7 @@ export default function ScanStockPage() {
       {err && !pending && <p className="text-sm text-danger">{err}</p>}
 
       {/* Session log */}
-      <div className="bg-surface border border-line rounded-lg overflow-hidden">
+      <div className="neu rounded-2xl overflow-hidden">
         <div className="px-4 py-3 border-b border-line text-sm font-medium flex items-center justify-between">
           <span>Scanned this session <span className="text-muted font-normal">· {log.length}</span></span>
           {log.length > 0 && <button onClick={() => setLog([])} className="text-xs text-muted hover:text-danger">Clear</button>}

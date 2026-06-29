@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, UserCheck, UserX, UserMinus, FileText, Shield, Settings, ScrollText, StickyNote, MoreHorizontal, Trash2, Plus, Send } from "lucide-react";
+import { X, UserCheck, UserX, UserMinus, FileText, Shield, Settings, ScrollText, StickyNote, MoreHorizontal, Trash2, Send } from "lucide-react";
 import { api, type Employee, type EmployeeLog, type EmployeeNote } from "../../../lib/api";
 
 interface Props {
@@ -55,7 +55,7 @@ export function MoreActionsPanel({ employee, onClose, onStatusChanged }: Props) 
     if (!confirm(`Change status to "${newStatus}"?`)) return;
     setStatusUpdating(true);
     try {
-      const updated = await api.patchEmployeeStatus(employee.id, { status: newStatus });
+      const updated = await api.patchEmployeeStatus(employee.id, newStatus);
       onStatusChanged(updated as Employee);
       onClose();
     } catch { /* */ }
@@ -96,7 +96,7 @@ export function MoreActionsPanel({ employee, onClose, onStatusChanged }: Props) 
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-line">
           <div className="flex items-center gap-2">
             {panel ? (

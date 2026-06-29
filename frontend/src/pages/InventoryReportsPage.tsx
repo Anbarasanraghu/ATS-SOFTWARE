@@ -8,7 +8,7 @@ function Card({ label, value, sub, onClick }: { label: string; value: string; su
   return (
     <button
       onClick={onClick}
-      className={`text-left w-full bg-surface border border-line rounded-lg p-4 transition-all
+      className={`text-left w-full neu rounded-2xl p-4 transition-all
         ${onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 hover:border-line/80" : "cursor-default"}`}
     >
       <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
@@ -30,7 +30,7 @@ export default function InventoryReportsPage() {
   const maxVal = Math.max(1, ...stats.map((s) => Math.max(s.stock_in, s.stock_out)));
 
   return (
-    <div className="space-y-6">
+    <div className="neu-scene p-5 sm:p-6 space-y-6">
       <h1 className="text-xl font-semibold">Inventory Reports</h1>
 
       {summary && (
@@ -51,7 +51,7 @@ export default function InventoryReportsPage() {
       )}
 
       {/* Movements / value by period */}
-      <div className="bg-surface border border-line rounded-lg overflow-hidden">
+      <div className="neu rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-line">
           <div className="text-sm font-medium">Stock movement &amp; trade by {period === "daily" ? "day (30d)" : "month (12m)"}</div>
           <div className="flex border border-line rounded-md overflow-hidden text-sm">
@@ -97,7 +97,7 @@ export default function InventoryReportsPage() {
 
       {/* Low stock list */}
       {summary && summary.low_stock_items.length > 0 && (
-        <div className="bg-surface border border-line rounded-lg overflow-hidden">
+        <div className="neu rounded-2xl overflow-hidden">
           <div className="px-4 py-3 border-b border-line text-sm font-medium flex items-center gap-2">
             <AlertTriangle size={15} className="text-amber-500" /> Low stock items
           </div>

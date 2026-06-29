@@ -63,12 +63,12 @@ export function WorkReportsModal({ employeeId, employeeName, employeePhone, onCl
 
   const statusColor = (s: string) =>
     s === "approved" ? "bg-green-100 text-green-700" : s === "rejected" ? "bg-red-100 text-red-700"
-    : s === "submitted" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600";
+    : s === "submitted" ? "bg-blue-100 text-blue-700" : "bg-surface-2 text-muted";
 
   return (
     <>
       <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+        <div className="bg-surface rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-line">
             <div className="flex items-center gap-2">
               <FileText size={18} className="text-accent" />

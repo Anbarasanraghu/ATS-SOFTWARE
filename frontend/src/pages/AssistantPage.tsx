@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Send, User, Wrench, AlertTriangle, Loader2, Sparkles } from "lucide-react";
 import { agentApi, type AgentToolCall, type AgentPendingAction } from "../lib/api";
+import MarkdownLite from "../components/MarkdownLite";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -72,14 +73,14 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-w-3xl mx-auto">
+    <div className="ws-scene p-4 sm:p-5 flex flex-col h-[calc(100vh-6rem)] max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center gap-3 pb-4 border-b border-line">
         <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-white">
           <Sparkles size={18} />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-ink">ATS Assistant</h1>
+          <h1 className="text-lg font-extrabold font-display bg-gradient-to-r from-ink to-info bg-clip-text text-transparent">ATS Assistant</h1>
           <p className="text-xs text-muted">Ask about sales, inventory, customers, cash flow and more.</p>
         </div>
       </div>
@@ -106,15 +107,15 @@ export default function AssistantPage() {
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-              m.role === "user" ? "bg-ink text-white" : "bg-accent text-white"}`}>
+              m.role === "user" ? "bg-white/10 text-ink" : "bg-accent text-white shadow-glow-violet"}`}>
               {m.role === "user" ? <User size={15} /> : <Bot size={15} />}
             </div>
             <div className={`max-w-[80%] ${m.role === "user" ? "items-end" : "items-start"} flex flex-col gap-1.5`}>
-              <div className={`px-4 py-2.5 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
+              <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                 m.role === "user"
-                  ? "bg-ink text-white rounded-tr-sm"
-                  : "bg-surface border border-line text-ink rounded-tl-sm"}`}>
-                {m.content}
+                  ? "bg-accent text-white rounded-tr-sm whitespace-pre-wrap"
+                  : "glass text-ink rounded-tl-sm"}`}>
+                {m.role === "user" ? m.content : <MarkdownLite text={m.content} />}
               </div>
               {m.toolCalls && m.toolCalls.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
@@ -138,7 +139,7 @@ export default function AssistantPage() {
             <div className="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center flex-shrink-0">
               <Bot size={15} />
             </div>
-            <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-surface border border-line">
+            <div className="px-4 py-3 rounded-2xl rounded-tl-sm ws-card">
               <Loader2 size={16} className="animate-spin text-muted" />
             </div>
           </div>

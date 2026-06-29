@@ -116,7 +116,7 @@ export function SendMessageModal({ employeeId, employeeName, employeePhone, onCl
   if (sent) {
     return (
       <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
+        <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md p-8 text-center">
           <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${sendVia === "whatsapp" ? "bg-green-100" : "bg-blue-100"}`}>
             {sendVia === "whatsapp"
               ? <MessageCircle size={24} className="text-green-600" />
@@ -137,7 +137,7 @@ export function SendMessageModal({ employeeId, employeeName, employeePhone, onCl
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh]">
+      <div className="bg-surface rounded-2xl shadow-xl w-full max-w-lg flex flex-col overflow-hidden max-h-[90vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-line">
           <div className="flex items-center gap-2">
             <MessageSquare size={18} className="text-accent" />

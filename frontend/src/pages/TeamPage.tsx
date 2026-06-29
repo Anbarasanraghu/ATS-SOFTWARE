@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Plus, X, Pencil, Trash2, Users, AlertTriangle } from "lucide-react";
+import { Plus, X, Pencil, Trash2, Users, UserPlus, DollarSign, AlertTriangle } from "lucide-react";
 import { teamApi, type TeamUser, type Seats, type TeamModule } from "../lib/api";
 import { useAuth } from "../auth/AuthContext";
+import { PageHeader, StatCard, Button, Badge } from "../components/ui";
 
 const ROLES = [
   { value: "member", label: "Member — only assigned modules" },
@@ -32,31 +33,27 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="ws-scene p-5 sm:p-6 space-y-6 max-w-4xl">
       {/* Header + seat usage */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-white"><Users size={18} /></div>
-          <div>
-            <h1 className="text-lg font-bold text-ink">Team</h1>
-            <p className="text-xs text-muted">Add users for your office and choose what each can access.</p>
-          </div>
-        </div>
-        <button
-          onClick={() => { setError(null); setEditing("new"); }}
-          disabled={!seats?.can_add}
-          title={seats && !seats.can_add ? "Seat limit reached — ask your provider for more seats" : ""}
-          className="inline-flex items-center gap-2 rounded-md bg-accent text-white px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-40">
-          <Plus size={16} /> Add user
-        </button>
-      </div>
+      <PageHeader
+        title="Team"
+        subtitle="Add users for your office and choose what each can access."
+        icon={Users}
+        actions={
+          <Button icon={Plus} onClick={() => { setError(null); setEditing("new"); }}
+            disabled={!seats?.can_add}
+            title={seats && !seats.can_add ? "Seat limit reached — ask your provider for more seats" : ""}>
+            Add user
+          </Button>
+        }
+      />
 
       {seats && (
-        <div className="flex flex-wrap gap-3">
-          <Stat label="Seats used" value={`${seats.active_users} / ${seats.max_users}`} />
-          <Stat label="Available" value={String(seats.available)} />
-          <Stat label="Monthly cost" value={`$${seats.monthly_total.toLocaleString()}`}
-            sub={`$${seats.price_per_user}/user`} />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <StatCard label="Seats used" value={`${seats.active_users} / ${seats.max_users}`} icon={Users} />
+          <StatCard label="Available" value={String(seats.available)} icon={UserPlus} tone="info" />
+          <StatCard label="Monthly cost" value={`$${seats.monthly_total.toLocaleString()}`}
+            sub={`$${seats.price_per_user}/user`} icon={DollarSign} tone="success" />
         </div>
       )}
 
@@ -68,7 +65,7 @@ export default function TeamPage() {
       {error && <div className="text-sm text-danger bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>}
 
       {/* Users table */}
-      <div className="bg-surface border border-line rounded-lg overflow-hidden">
+      <div className="ws-card overflow-hidden">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
             <th className="px-4 py-3">User</th><th className="px-4 py-3">Role</th>
@@ -95,9 +92,7 @@ export default function TeamPage() {
                         </div>}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${u.status === "active" ? "bg-green-100 text-green-700" : "bg-line text-muted"}`}>
-                      {u.status}
-                    </span>
+                    <Badge tone={u.status === "active" ? "success" : "neutral"}>{u.status}</Badge>
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     {!u.is_owner && !isSelf && (
@@ -124,16 +119,6 @@ export default function TeamPage() {
           onError={setError}
         />
       )}
-    </div>
-  );
-}
-
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="bg-surface border border-line rounded-lg px-4 py-3 min-w-[130px]">
-      <div className="text-xs text-muted">{label}</div>
-      <div className="text-lg font-bold text-ink">{value}</div>
-      {sub && <div className="text-[11px] text-muted">{sub}</div>}
     </div>
   );
 }
@@ -179,12 +164,12 @@ function UserModal({ user, modules, onClose, onSaved, onError }: {
     } finally { setBusy(false); }
   }
 
-  const inputCls = "mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 outline-none focus:border-accent text-sm";
+  const inputCls = "mt-1 w-full rounded-md ws-input px-3 py-2 outline-none focus:border-accent text-sm";
   const labelCls = "text-xs font-medium uppercase tracking-wide text-muted";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8 overflow-y-auto" onClick={onClose}>
-      <div className="w-full max-w-md bg-surface border border-line rounded-lg p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md ws-card p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{isEdit ? "Edit user" : "Add user"}</h2>
           <button onClick={onClose} className="text-muted hover:text-ink"><X size={18} /></button>

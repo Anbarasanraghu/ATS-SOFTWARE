@@ -4,7 +4,7 @@ import { api, type Category, type FieldDef, type Product, type ProductBarcode, t
 import { money } from "../lib/money";
 import ScanInput from "../components/ScanInput";
 
-const inputCls = "w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+const inputCls = "w-full rounded-xl neu-inset px-3 py-2 text-sm outline-none text-ink placeholder:text-muted";
 const NUMERIC = ["price", "cost_price", "stock_qty", "reorder_level", "tax_percent"];
 
 // ── A single inline-editable text/number cell ────────────────
@@ -309,26 +309,26 @@ export default function InventoryPage() {
   const supOpts = suppliers.map((s) => ({ id: s.id, label: s.name }));
 
   return (
-    <div className="space-y-6">
+    <div className="neu-scene p-5 sm:p-6 space-y-6">
       <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-xl font-semibold">Inventory</h1>
-        <div className="flex border border-line rounded-md overflow-hidden text-sm">
+        <h1 className="text-xl font-semibold text-ink">Inventory</h1>
+        <div className="flex neu-inset rounded-xl overflow-hidden text-sm p-1 gap-1">
           {(["items", "categories", "suppliers"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              className={`px-3 py-1.5 capitalize ${tab === t ? "bg-accent text-white" : "hover:bg-line/50"}`}>{t}</button>
+              className={`px-3 py-1.5 rounded-lg capitalize transition-all ${tab === t ? "bg-accent text-white shadow-glow-violet" : "text-muted hover:text-ink"}`}>{t}</button>
           ))}
         </div>
         {tab === "items" && (
           <div className="ml-auto flex items-center gap-2">
             <ScanInput onScan={handleScan} className="w-56" placeholder="Scan barcode → stock-in / add…" />
-            <input className="rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent w-48"
+            <input className="rounded-xl neu-inset px-3 py-2 text-sm outline-none focus:border-accent w-48"
               placeholder="Search name / SKU / barcode…" value={search} onChange={(e) => setSearch(e.target.value)} />
-            <select className="rounded-md border border-line bg-paper px-2 py-2 text-sm outline-none focus:border-accent max-w-[150px]"
+            <select className="rounded-xl neu-inset px-2 py-2 text-sm outline-none focus:border-accent max-w-[150px]"
               value={catFilter} onChange={(e) => setCatFilter(e.target.value)} title="Filter by category">
               <option value="">All categories</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            <select className="rounded-md border border-line bg-paper px-2 py-2 text-sm outline-none focus:border-accent max-w-[150px]"
+            <select className="rounded-xl neu-inset px-2 py-2 text-sm outline-none focus:border-accent max-w-[150px]"
               value={supFilter} onChange={(e) => setSupFilter(e.target.value)} title="Filter by supplier">
               <option value="">All suppliers</option>
               {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -362,7 +362,7 @@ export default function InventoryPage() {
       )}
 
       {tab === "items" && (
-        <div className="bg-surface border border-line rounded-lg overflow-x-auto">
+        <div className="neu rounded-2xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
@@ -493,7 +493,7 @@ export default function InventoryPage() {
             <input className={`${inputCls} flex-1`} placeholder="Category name…" value={catName} onChange={(e) => setCatName(e.target.value)} required />
             <button type="submit" className="rounded-md bg-accent text-white px-4 py-2 text-sm font-medium flex items-center gap-1"><Plus size={14} /> Add</button>
           </form>
-          <div className="bg-surface border border-line rounded-lg divide-y divide-line">
+          <div className="neu rounded-2xl divide-y divide-line">
             {categories.length === 0 && <p className="px-4 py-3 text-sm text-muted">No categories yet.</p>}
             {categories.map((c) => (
               <div key={c.id} className="flex items-center justify-between px-4 py-3 text-sm">
@@ -507,7 +507,7 @@ export default function InventoryPage() {
 
       {tab === "suppliers" && (
         <div className="space-y-4">
-          <form onSubmit={addSupplier} className="bg-surface border border-line rounded-lg p-4 grid grid-cols-2 gap-3">
+          <form onSubmit={addSupplier} className="neu rounded-2xl p-4 grid grid-cols-2 gap-3">
             <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-muted">Name *</span>
               <input required className={`${inputCls} mt-1`} value={supForm.name} onChange={(e) => setSupForm({ ...supForm, name: e.target.value })} /></label>
             <label className="block"><span className="text-xs font-medium uppercase tracking-wide text-muted">Contact Person</span>
@@ -520,7 +520,7 @@ export default function InventoryPage() {
               <button type="submit" className="rounded-md bg-accent text-white px-4 py-2 text-sm font-medium flex items-center gap-1"><Plus size={14} /> Add Supplier</button>
             </div>
           </form>
-          <div className="bg-surface border border-line rounded-lg divide-y divide-line">
+          <div className="neu rounded-2xl divide-y divide-line">
             {suppliers.length === 0 && <p className="px-4 py-3 text-sm text-muted">No suppliers yet.</p>}
             {suppliers.map((s) => (
               <div key={s.id} className="flex items-center justify-between px-4 py-3 text-sm">
@@ -535,7 +535,7 @@ export default function InventoryPage() {
 
       {movingProduct && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <form onSubmit={submitMove} className="bg-surface border border-line rounded-lg p-6 w-full max-w-md space-y-4 shadow-lg">
+          <form onSubmit={submitMove} className="neu rounded-2xl p-6 w-full max-w-md space-y-4 shadow-lg">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">Stock Movement — {movingProduct.name}</h2>
               <button type="button" onClick={() => setMovingProduct(null)} className="text-muted hover:text-ink"><X size={18} /></button>
@@ -568,14 +568,14 @@ export default function InventoryPage() {
       {/* Multiple barcodes manager */}
       {bcProduct && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface border border-line rounded-lg p-6 w-full max-w-lg space-y-4 shadow-lg max-h-[90vh] overflow-y-auto">
+          <div className="neu rounded-2xl p-6 w-full max-w-lg space-y-4 shadow-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">Barcodes — {bcProduct.name}</h2>
               <button onClick={() => setBcProduct(null)} className="text-muted hover:text-ink"><X size={18} /></button>
             </div>
 
             {/* Primary barcode (lives on the product) */}
-            <div className="rounded-md border border-line bg-paper/50 px-3 py-2 text-sm flex items-center justify-between">
+            <div className="rounded-xl neu-inset/50 px-3 py-2 text-sm flex items-center justify-between">
               <div>
                 <span className="text-xs uppercase tracking-wide text-muted mr-2">Primary</span>
                 <span className="font-mono">{bcProduct.barcode || "—"}</span>

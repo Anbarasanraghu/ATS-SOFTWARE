@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     # "auto" picks query-param auth for AIza... keys and Bearer auth otherwise.
     gemini_auth_mode: str = "auto"  # auto | key | bearer
     agent_max_tool_loops: int = 6   # safety cap on tool-call rounds per message
+    # Transient 503/500 "model overloaded" errors auto-retry with backoff.
+    gemini_max_retries: int = 3
+    # Best-effort fallback models tried if the primary stays overloaded
+    # (comma-separated). Models that 404/quota-fail are skipped instantly.
+    gemini_fallback_models: str = "gemini-2.0-flash"
 
 
 settings = Settings()

@@ -41,7 +41,7 @@ export default function AddFollowUpModal({ customer, onClose, onSaved, overlayCl
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm(f => ({ ...f, [k]: v }));
 
-  const inputCls = "mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+  const inputCls = "mt-1 w-full rounded-md input-3d px-3 py-2 text-sm outline-none focus:border-black";
   const labelCls = "block";
   const spanCls = "text-xs font-medium uppercase tracking-wide text-muted";
 
@@ -69,7 +69,7 @@ export default function AddFollowUpModal({ customer, onClose, onSaved, overlayCl
   return (
     <div className={`fixed inset-0 bg-black/30 flex items-center justify-center ${overlayClass} p-4`}>
       <form onSubmit={handleSubmit}
-        className="bg-surface border border-line rounded-lg w-full max-w-md shadow-xl">
+        className="card-3d w-full max-w-md shadow-xl">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-line">
@@ -140,7 +140,7 @@ export default function AddFollowUpModal({ customer, onClose, onSaved, overlayCl
             Cancel
           </button>
           <button type="submit" disabled={saving}
-            className="px-4 py-2 text-sm rounded-md bg-accent text-white font-medium disabled:opacity-60">
+            className="px-4 py-2 text-sm rounded-md bg-black text-white font-medium disabled:opacity-60">
             {saving ? "Saving…" : "Save Follow-up"}
           </button>
         </div>

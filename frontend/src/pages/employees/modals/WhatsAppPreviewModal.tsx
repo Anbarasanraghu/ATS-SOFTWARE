@@ -56,7 +56,7 @@ export function WhatsAppPreviewModal({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-line bg-green-50">
@@ -98,7 +98,7 @@ export function WhatsAppPreviewModal({
               </button>
             </div>
             <textarea
-              className="w-full border border-line rounded-xl px-4 py-3 text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-green-300 resize-none bg-gray-50"
+              className="w-full border border-line rounded-xl px-4 py-3 text-sm font-mono leading-relaxed focus:outline-none focus:ring-2 focus:ring-green-300 resize-none bg-surface-2"
               rows={11}
               value={editedMsg}
               onChange={e => setEditedMsg(e.target.value)}

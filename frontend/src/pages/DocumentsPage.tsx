@@ -5,7 +5,7 @@ import {
 } from "../lib/api";
 import { money } from "../lib/money";
 
-const inputCls = "w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+const inputCls = "w-full rounded-xl neu-inset px-3 py-2 text-sm outline-none focus:border-accent";
 const blankLine = (): DocItem => ({ product_id: null, description: "", quantity: 1, unit_price: 0, tax_percent: 0 });
 
 export default function DocumentsPage({ docType }: { docType: "purchase" | "sale" }) {
@@ -112,7 +112,7 @@ export default function DocumentsPage({ docType }: { docType: "purchase" | "sale
   }
 
   return (
-    <div className="space-y-6">
+    <div className="neu-scene p-5 sm:p-6 space-y-6">
       <div className="flex items-center gap-3">
         <h1 className="text-xl font-semibold">{title}</h1>
         <button onClick={openForm} className="ml-auto flex items-center gap-2 rounded-md bg-accent text-white px-4 py-2 text-sm font-medium">
@@ -120,7 +120,7 @@ export default function DocumentsPage({ docType }: { docType: "purchase" | "sale
         </button>
       </div>
 
-      <div className="bg-surface border border-line rounded-lg overflow-hidden">
+      <div className="neu rounded-2xl overflow-hidden">
         {docs.length === 0 ? (
           <p className="p-6 text-sm text-muted">No {title.toLowerCase()} yet.</p>
         ) : (
@@ -153,7 +153,7 @@ export default function DocumentsPage({ docType }: { docType: "purchase" | "sale
 
       {showForm && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-          <form onSubmit={save} className="bg-surface border border-line rounded-lg p-6 w-full max-w-3xl space-y-4 shadow-lg max-h-[90vh] overflow-y-auto">
+          <form onSubmit={save} className="neu rounded-2xl p-6 w-full max-w-3xl space-y-4 shadow-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h2 className="font-semibold">New {isPurchase ? "Purchase" : "Sale"}</h2>
               <button type="button" onClick={() => setShowForm(false)} className="text-muted hover:text-ink"><X size={18} /></button>

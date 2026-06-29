@@ -38,7 +38,7 @@ function fmt(v: string | null | undefined) { return v?.trim() || "—"; }
 const STATUS_CLS: Record<string, string> = {
   active:     "bg-emerald-100 text-emerald-700",
   on_leave:   "bg-amber-100 text-amber-700",
-  inactive:   "bg-gray-100 text-gray-600",
+  inactive:   "bg-surface-2 text-muted",
   terminated: "bg-red-100 text-red-700",
 };
 
@@ -163,7 +163,7 @@ export function EmployeeDrawer({ employee, departments, onClose, onEdit }: Props
         <InfoItem label="Shift"             value={fmt(currentEmp.work_shift)} />
         <InfoItem label="Salary"            value={currentEmp.salary ? `₹${currentEmp.salary.toLocaleString("en-IN")}` : "—"} />
         <InfoItem label="Status" value={
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_CLS[currentEmp.status] ?? "bg-gray-100 text-gray-600"}`}>
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${STATUS_CLS[currentEmp.status] ?? "bg-surface-2 text-muted"}`}>
             {currentEmp.status.replace("_", " ").toUpperCase()}
           </span>
         } />
@@ -204,7 +204,7 @@ export function EmployeeDrawer({ employee, departments, onClose, onEdit }: Props
     <>
       {/* ── Drawer ──────────────────────────────────────────── */}
       <div className="fixed inset-0 z-50 flex justify-end">
-        <div className="flex-1 bg-ink/20" onClick={onClose} />
+        <div className="flex-1 bg-black/20" onClick={onClose} />
 
         <div className="w-[460px] bg-paper flex flex-col h-full shadow-2xl border-l border-line">
 
@@ -224,7 +224,7 @@ export function EmployeeDrawer({ employee, departments, onClose, onEdit }: Props
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-base font-bold text-ink leading-tight truncate">{currentEmp.full_name}</h2>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_CLS[currentEmp.status] ?? "bg-gray-100 text-gray-600"}`}>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_CLS[currentEmp.status] ?? "bg-surface-2 text-muted"}`}>
                     {currentEmp.status.replace("_", " ").toUpperCase()}
                   </span>
                 </div>

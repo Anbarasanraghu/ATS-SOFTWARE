@@ -51,7 +51,7 @@ export default function AddCustomerModal({ editing, existingCustomers = [], onCl
 
   const set = (k: keyof Form, v: string) => setForm(f => ({ ...f, [k]: v }));
 
-  const inputCls = "mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+  const inputCls = "mt-1 w-full rounded-md input-3d px-3 py-2 text-sm outline-none focus:border-black";
   const labelCls = "block";
   const spanCls = "text-xs font-medium uppercase tracking-wide text-muted";
 
@@ -117,7 +117,7 @@ export default function AddCustomerModal({ editing, existingCustomers = [], onCl
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
       <form onSubmit={handleSubmit}
-        className="bg-surface border border-line rounded-lg w-full max-w-2xl shadow-xl max-h-[92vh] overflow-y-auto">
+        className="card-3d w-full max-w-2xl shadow-xl max-h-[92vh] overflow-y-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-line sticky top-0 bg-surface z-10">
@@ -201,7 +201,7 @@ export default function AddCustomerModal({ editing, existingCustomers = [], onCl
               {/* Tags Input */}
               <div className="col-span-2">
                 <span className={`${spanCls} flex items-center gap-1`}><Tag size={11} /> Tags</span>
-                <div className="mt-1 min-h-[38px] flex flex-wrap gap-1.5 items-center rounded-md border border-line bg-paper px-3 py-2 focus-within:border-accent">
+                <div className="mt-1 min-h-[38px] flex flex-wrap gap-1.5 items-center rounded-md input-3d px-3 py-2 focus-within:border-black">
                   {tags.map((tag, i) => (
                     <span key={tag}
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${TAG_COLORS[i % TAG_COLORS.length]}`}>
@@ -270,7 +270,7 @@ export default function AddCustomerModal({ editing, existingCustomers = [], onCl
             Cancel
           </button>
           <button type="submit" disabled={saving}
-            className="px-4 py-2 text-sm rounded-md bg-accent text-white font-medium disabled:opacity-60">
+            className="px-4 py-2 text-sm rounded-md bg-black text-white font-medium disabled:opacity-60">
             {saving ? "Saving…" : editing ? "Save Changes" : "Create Customer"}
           </button>
         </div>

@@ -58,7 +58,7 @@ export function RecordPaymentModal({ invoice, onClose, onSuccess }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-line">
@@ -162,7 +162,7 @@ export function RecordPaymentModal({ invoice, onClose, onSuccess }: Props) {
                 <span className="text-muted">Payment Status</span>
                 <span className={`font-semibold ${
                   newPayStatus === "Paid" ? "text-emerald-600" :
-                  newPayStatus === "Partially Paid" ? "text-amber-600" : "text-zinc-600"
+                  newPayStatus === "Partially Paid" ? "text-amber-600" : "text-muted"
                 }`}>{newPayStatus}</span>
               </div>
             </div>

@@ -53,16 +53,16 @@ export default function TenantDetailPage() {
     } finally { setSaving(false); }
   }
 
-  const inputCls = "rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+  const inputCls = "rounded-md ws-input px-3 py-2 text-sm outline-none focus:border-accent";
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-xl font-semibold">Configure tenant{tenant ? ` — ${tenant.name}` : ""}</h1>
+    <div className="ws-scene p-5 sm:p-6 space-y-8">
+      <h1 className="text-2xl font-extrabold font-display bg-gradient-to-r from-ink to-info bg-clip-text text-transparent">Configure tenant{tenant ? ` — ${tenant.name}` : ""}</h1>
 
       {/* Seats & billing */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Seats &amp; billing</h2>
-        <div className="bg-surface border border-line rounded-lg p-4 flex flex-wrap items-end gap-6">
+        <div className="ws-card p-4 flex flex-wrap items-end gap-6">
           <div>
             <div className="text-xs text-muted">Active users</div>
             <div className="text-lg font-bold">{tenant?.active_users ?? "—"} / {tenant?.max_users ?? "—"}</div>
@@ -76,7 +76,7 @@ export default function TenantDetailPage() {
             <span className="text-xs font-medium uppercase tracking-wide text-muted">Paid seats</span>
             <input type="number" min={1} value={seats}
               onChange={(e) => setSeats(parseInt(e.target.value) || 1)}
-              className="mt-1 w-28 rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent" />
+              className="mt-1 w-28 rounded-md ws-input px-3 py-2 text-sm outline-none focus:border-accent" />
           </label>
           <button onClick={saveSeats} disabled={savingSeats}
             className="rounded-md bg-accent text-white px-4 py-2 text-sm font-medium disabled:opacity-50">
@@ -88,7 +88,7 @@ export default function TenantDetailPage() {
       {/* Modules */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Modules</h2>
-        <div className="bg-surface border border-line rounded-lg divide-y divide-line">
+        <div className="ws-card divide-y divide-line">
           {mods.length === 0 && <p className="px-4 py-3 text-sm text-muted">No modules found.</p>}
           {mods.map((m) => (
             <label key={m.module_id} className="flex items-center justify-between px-4 py-3 text-sm cursor-pointer hover:bg-paper/60">
@@ -115,7 +115,7 @@ export default function TenantDetailPage() {
           </select>
         </div>
 
-        <div className="bg-surface border border-line rounded-lg divide-y divide-line">
+        <div className="ws-card divide-y divide-line">
           {fields.length === 0 && <p className="px-4 py-3 text-sm text-muted">No custom fields for {entity} yet.</p>}
           {fields.map((d) => (
             <div key={d.id} className="px-4 py-3 text-sm flex items-center gap-2">
@@ -128,7 +128,7 @@ export default function TenantDetailPage() {
         </div>
 
         <form onSubmit={addField}
-          className="flex flex-wrap gap-2 items-end bg-surface border border-line rounded-lg p-4">
+          className="flex flex-wrap gap-2 items-end ws-card p-4">
           <input className={inputCls} placeholder="key (e.g. brand)" value={f.field_key}
             onChange={(e) => setF({ ...f, field_key: e.target.value })} required />
           <input className={inputCls} placeholder="Label" value={f.label}

@@ -1,21 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Plus, Search, Filter, Download, Printer, MessageCircle,
-  ChevronDown, X, Trash2, CheckCircle, DollarSign, Clock,
+  X, Trash2, CheckCircle, DollarSign, Clock,
   Users, TrendingUp, AlertCircle, BarChart2, FileText,
 } from "lucide-react";
-import { api, type Employee, type Payroll, type PayrollStats, type LeaveSummary, type CompanySettings } from "../lib/api";
+import { api, type Employee, type Payroll, type PayrollStats, type CompanySettings } from "../lib/api";
 
 // ── Constants ─────────────────────────────────────────────────
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const EARNINGS: [string, string][] = [
-  ["basic","Basic"],["hra","HRA"],["da","DA"],["conveyance","Conveyance"],
-  ["medical","Medical"],["special","Special"],["bonus","Bonus"],["overtime","Overtime"],["other","Other"],
-];
-const DEDUCTIONS: [string, string][] = [
-  ["pf","PF"],["esi","ESI"],["pt","Prof. Tax"],["tds","TDS"],["loan","Loan"],["advance","Advance"],
-];
 const now = new Date();
 const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
 
@@ -24,17 +17,8 @@ const PAYMENT_STATUSES = ["unpaid","payment_pending","paid","hold"];
 const PAYMENT_METHODS  = ["cash","upi","bank_transfer","cheque","other"];
 const SALARY_TYPES     = ["monthly","daily","hourly"];
 
-const ALLOWANCE_PRESETS = [
-  "House Rent Allowance","Travel Allowance","Food Allowance",
-  "Medical Allowance","Performance Bonus","Incentive","Other Allowance",
-];
-const DEDUCTION_PRESETS = [
-  "LOP Deduction","Late Deduction","Advance Salary Deduction",
-  "Loan Deduction","PF Deduction","ESI Deduction","TDS","Other Deduction",
-];
-
 const STATUS_CLS: Record<string, string> = {
-  draft:            "bg-zinc-100 text-zinc-600",
+  draft:            "bg-surface-2 text-muted",
   calculated:       "bg-blue-100 text-blue-700",
   pending_approval: "bg-amber-100 text-amber-700",
   approved:         "bg-sky-100 text-sky-700",
@@ -43,7 +27,7 @@ const STATUS_CLS: Record<string, string> = {
   cancelled:        "bg-red-100 text-red-600",
 };
 const PAY_STATUS_CLS: Record<string, string> = {
-  unpaid:          "bg-zinc-100 text-zinc-600",
+  unpaid:          "bg-surface-2 text-muted",
   payment_pending: "bg-amber-100 text-amber-700",
   paid:            "bg-emerald-100 text-emerald-700",
   hold:            "bg-orange-100 text-orange-700",
@@ -51,7 +35,6 @@ const PAY_STATUS_CLS: Record<string, string> = {
 
 // ── Helpers ───────────────────────────────────────────────────
 
-const fmt = (n: number) => `₹${Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtN = (n: number) => Number(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 const monthLabel = (m: string) => {
   const [y, mo] = m.split("-");
@@ -181,12 +164,6 @@ function SCard({ title, children }: { title: string; children: React.ReactNode }
     </div>
   );
 }
-function Row2({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-2 gap-3">{children}</div>;
-}
-function Row3({ children }: { children: React.ReactNode }) {
-  return <div className="grid grid-cols-3 gap-3">{children}</div>;
-}
 function FRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -231,7 +208,7 @@ function PayslipView({ payroll, company }: { payroll: Payroll; company: CompanyS
   const companyLogo = company?.company_logo || null;
 
   return (
-    <div className="print-selected bg-white" style={{ width: "210mm", minHeight: "297mm", padding: "15mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", color: "#111" }}>
+    <div className="print-selected bg-surface" style={{ width: "210mm", minHeight: "297mm", padding: "15mm", boxSizing: "border-box", fontFamily: "Arial, sans-serif", color: "#111" }}>
       {/* Company Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "2px solid #0F6E56", paddingBottom: "10px", marginBottom: "10px" }}>
         <div>
@@ -1271,10 +1248,10 @@ export default function PayrollPage() {
       {/* Payslip Modal */}
       {showPayslip && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl my-4">
+          <div className="bg-surface rounded-xl shadow-2xl w-full max-w-3xl my-4">
             {/* Payslip actions (no-print) */}
-            <div className="no-print flex items-center justify-between px-5 py-3 border-b border-gray-200">
-              <span className="font-semibold text-gray-800">
+            <div className="no-print flex items-center justify-between px-5 py-3 border-b border-line">
+              <span className="font-semibold text-ink">
                 Payslip — {showPayslip.employee_name} — {monthLabel(showPayslip.payroll_month)}
               </span>
               <div className="flex items-center gap-2">
@@ -1286,7 +1263,7 @@ export default function PayrollPage() {
                   className="flex items-center gap-1.5 px-3 py-1.5 text-sm border border-accent text-accent rounded-lg hover:bg-accent/5">
                   <Printer size={14}/> Print / Download PDF
                 </button>
-                <button onClick={() => setShowPayslip(null)} className="text-gray-400 hover:text-gray-700 ml-1">
+                <button onClick={() => setShowPayslip(null)} className="text-muted hover:text-ink-soft ml-1">
                   <X size={20}/>
                 </button>
               </div>

@@ -25,7 +25,7 @@ export default function AddPaymentFollowupModal({ customer, onClose, onSaved, ov
   const paid = parseFloat(paidAmount) || 0;
   const balance = Math.max(0, inv - paid);
 
-  const inputCls = "mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+  const inputCls = "mt-1 w-full rounded-md input-3d px-3 py-2 text-sm outline-none focus:border-black";
   const labelCls = "block";
   const spanCls = "text-xs font-medium uppercase tracking-wide text-muted";
 
@@ -55,12 +55,12 @@ export default function AddPaymentFollowupModal({ customer, onClose, onSaved, ov
   return (
     <div className={`fixed inset-0 bg-black/30 flex items-center justify-center ${overlayClass} p-4`}>
       <form onSubmit={handleSubmit}
-        className="bg-surface border border-line rounded-lg w-full max-w-md shadow-xl">
+        className="card-3d w-full max-w-md shadow-xl">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-line">
           <div className="flex items-center gap-2">
-            <CreditCard size={16} className="text-accent" />
+            <CreditCard size={16} className="text-black" />
             <div>
               <h2 className="font-semibold text-ink">Payment Follow-up</h2>
               <p className="text-xs text-muted mt-0.5">{customer.name}</p>
@@ -159,7 +159,7 @@ export default function AddPaymentFollowupModal({ customer, onClose, onSaved, ov
             Cancel
           </button>
           <button type="submit" disabled={saving || success}
-            className="px-4 py-2 text-sm rounded-md bg-accent text-white font-medium disabled:opacity-60 flex items-center gap-2">
+            className="px-4 py-2 text-sm rounded-md bg-black text-white font-medium disabled:opacity-60 flex items-center gap-2">
             <CreditCard size={14} />
             {saving ? "Saving…" : "Save Payment Follow-up"}
           </button>

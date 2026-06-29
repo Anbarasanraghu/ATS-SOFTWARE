@@ -75,10 +75,10 @@ function CompanyTab() {
         <div className="flex items-center gap-4">
           {form.company_logo ? (
             <div className="relative">
-              <img src={form.company_logo} alt="logo" className="h-16 w-auto max-w-[160px] object-contain border border-line rounded-lg p-1 bg-white" />
+              <img src={form.company_logo} alt="logo" className="h-16 w-auto max-w-[160px] object-contain border border-line rounded-lg p-1 bg-surface" />
               <button
                 onClick={() => { set("company_logo", null); if (fileRef.current) fileRef.current.value = ""; }}
-                className="absolute -top-2 -right-2 bg-white border border-line rounded-full p-0.5 text-muted hover:text-danger">
+                className="absolute -top-2 -right-2 ws-card rounded-full p-0.5 text-muted hover:text-danger">
                 <X size={12} />
               </button>
             </div>
@@ -209,7 +209,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       type="button"
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none ${checked ? "bg-accent" : "bg-line"}`}>
-      <span className={`inline-block h-4 w-4 rounded-full bg-white shadow ring-0 transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
+      <span className={`inline-block h-4 w-4 rounded-full bg-surface shadow ring-0 transition-transform ${checked ? "translate-x-4" : "translate-x-0"}`} />
     </button>
   );
 }
@@ -331,8 +331,8 @@ export default function SettingsPage() {
   const [tab, setTab] = useState<Tab>("company");
 
   return (
-    <div>
-      <h1 className="text-xl font-bold text-ink mb-1">Settings</h1>
+    <div className="ws-scene p-5 sm:p-6">
+      <h1 className="text-2xl font-extrabold font-display mb-1 bg-gradient-to-r from-ink to-info bg-clip-text text-transparent">Settings</h1>
       <p className="text-sm text-muted mb-6">Configure your company profile, invoice defaults, and print options.</p>
 
       <div className="flex gap-6">
@@ -364,7 +364,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Content area */}
-        <div className="flex-1 bg-surface border border-line rounded-xl p-6 min-h-[500px]">
+        <div className="flex-1 ws-card p-6 min-h-[500px]">
           {tab === "company"       && <CompanyTab />}
           {tab === "invoice"       && <InvoiceTab />}
           {tab === "print"         && <PrintTab />}

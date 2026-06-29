@@ -573,7 +573,7 @@ export default function NewInvoicePage() {
                 <Field label="Payment Status">
                   <div className={`${IC} bg-surface/60 cursor-default font-medium ${
                     payStatusLabel === "Paid"           ? "text-emerald-600" :
-                    payStatusLabel === "Partially Paid" ? "text-amber-600"   : "text-zinc-500"
+                    payStatusLabel === "Partially Paid" ? "text-amber-600"   : "text-muted"
                   }`}>{payStatusLabel}</div>
                 </Field>
                 <Field label="Paid Amount (₹)" error={errors.paidAmount}>
@@ -683,7 +683,7 @@ export default function NewInvoicePage() {
                     ? "bg-emerald-100 text-emerald-700"
                     : payStatusLabel === "Partially Paid"
                     ? "bg-amber-100 text-amber-700"
-                    : "bg-zinc-100 text-zinc-600"
+                    : "bg-surface-2 text-muted"
                 }`}>{payStatusLabel}</span>
               </div>
               <div>

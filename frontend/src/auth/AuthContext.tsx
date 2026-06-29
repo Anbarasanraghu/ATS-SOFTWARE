@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, getToken, setToken, invalidateCompanyCache, type Me } from "../lib/api";
+import { api, getToken, setToken, invalidateCompanyCache, prefetchCommon, type Me } from "../lib/api";
 
 interface AuthState {
   me: Me | null;
@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     async function load() {
       if (!getToken()) { setLoading(false); return; }
-      try { setMe(await api.me()); }
+      try { setMe(await api.me()); prefetchCommon(); }
       catch { setToken(null); }
       finally { setLoading(false); }
     }
@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { access_token } = await api.login(slug, email, password);
     setToken(access_token);
     setMe(await api.me());
+    prefetchCommon();
   }
 
   function logout() {

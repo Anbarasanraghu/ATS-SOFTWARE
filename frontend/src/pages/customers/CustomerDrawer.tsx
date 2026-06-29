@@ -17,7 +17,7 @@ import AddPaymentFollowupModal from "./AddPaymentFollowupModal";
 function StatusBadge({ value }: { value: string }) {
   const s = CRM_STATUSES.find(x => x.value === value);
   return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${s?.cls ?? "bg-zinc-100 text-zinc-500"}`}>
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${s?.cls ?? "bg-surface-2 text-muted"}`}>
       {s?.label ?? value}
     </span>
   );
@@ -26,7 +26,7 @@ function StatusBadge({ value }: { value: string }) {
 function PriorityBadge({ value }: { value: string }) {
   const p = PRIORITIES.find(x => x.value === value);
   return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${p?.cls ?? "bg-zinc-100 text-zinc-500"}`}>
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${p?.cls ?? "bg-surface-2 text-muted"}`}>
       {p?.label ?? value}
     </span>
   );
@@ -42,7 +42,7 @@ function PaymentStatusBadge({ value }: { value: string }) {
   };
   const label = PAYMENT_STATUSES.find(s => s.value === value)?.label ?? value;
   return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${cls[value] ?? "bg-zinc-100 text-zinc-500"}`}>
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${cls[value] ?? "bg-surface-2 text-muted"}`}>
       {label}
     </span>
   );
@@ -165,7 +165,7 @@ export default function CustomerDrawer({
       <button key={tab} onClick={() => setActiveTab(tab)}
         className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap ${
           activeTab === tab
-            ? "border-accent text-accent"
+            ? "border-black text-black"
             : "border-transparent text-muted hover:text-ink"
         }`}>
         {label}
@@ -203,7 +203,7 @@ export default function CustomerDrawer({
           </div>
           <div className="flex items-center gap-1 ml-2 flex-shrink-0">
             <button onClick={() => void loadData(true)} disabled={refreshing} title="Refresh"
-              className="p-1.5 rounded-md text-muted hover:text-accent hover:bg-accent-soft disabled:opacity-50">
+              className="p-1.5 rounded-md text-muted hover:text-black hover:bg-neutral-100 disabled:opacity-50">
               <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
             </button>
             <button onClick={onClose} className="p-1.5 rounded-md text-muted hover:text-ink">
@@ -215,7 +215,7 @@ export default function CustomerDrawer({
         {/* ── Action buttons ── */}
         <div className="flex items-center gap-2 px-5 py-3 border-b border-line bg-paper/60 flex-wrap">
           <button onClick={() => setShowInlineFollowup(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent text-white text-xs font-medium hover:bg-accent/90">
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black text-white text-xs font-medium hover:bg-black/90">
             <CalendarPlus size={13} /> Add Follow-up
           </button>
           <button onClick={() => setShowInlinePayment(true)}
@@ -277,7 +277,7 @@ export default function CustomerDrawer({
                   {customer.phone && (
                     <div className="flex items-center gap-2">
                       <Phone size={13} className="text-muted flex-shrink-0" />
-                      <a href={`tel:${customer.phone}`} className="text-accent hover:underline">{customer.phone}</a>
+                      <a href={`tel:${customer.phone}`} className="text-black hover:underline">{customer.phone}</a>
                     </div>
                   )}
                   {customer.whatsapp && customer.whatsapp !== customer.phone && (
@@ -289,7 +289,7 @@ export default function CustomerDrawer({
                   {customer.email && (
                     <div className="flex items-center gap-2">
                       <Mail size={13} className="text-muted flex-shrink-0" />
-                      <a href={`mailto:${customer.email}`} className="text-accent hover:underline">{customer.email}</a>
+                      <a href={`mailto:${customer.email}`} className="text-black hover:underline">{customer.email}</a>
                     </div>
                   )}
                   {customer.company && (
@@ -382,7 +382,7 @@ export default function CustomerDrawer({
                   </h3>
                   {followups.length > 0 && (
                     <button onClick={() => setActiveTab("activity")}
-                      className="text-xs text-accent hover:underline">View all →</button>
+                      className="text-xs text-black hover:underline">View all →</button>
                   )}
                 </div>
                 {loading ? (
@@ -391,7 +391,7 @@ export default function CustomerDrawer({
                   <div className="bg-paper rounded-lg border border-line p-4 text-sm text-muted text-center">
                     No follow-ups recorded yet.
                     <button onClick={() => setShowInlineFollowup(true)}
-                      className="block mx-auto mt-1.5 text-xs text-accent hover:underline">
+                      className="block mx-auto mt-1.5 text-xs text-black hover:underline">
                       Add first follow-up →
                     </button>
                   </div>
@@ -404,12 +404,12 @@ export default function CustomerDrawer({
                           {i < Math.min(followups.length, 3) - 1 && (
                             <div className="absolute left-[7px] top-5 bottom-0 w-px bg-line" />
                           )}
-                          <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-accent-soft border-2 border-accent" />
+                          <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-neutral-100 border-2 border-black" />
                           <div className="bg-paper rounded-lg border border-line p-3">
                             <div className="flex items-center justify-between gap-2 flex-wrap">
                               <span className="text-xs font-medium text-ink">{fmtMode(f.followup_mode)}</span>
                               <div className="flex items-center gap-2">
-                                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusInfo?.cls ?? "bg-zinc-100 text-zinc-500"}`}>
+                                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusInfo?.cls ?? "bg-surface-2 text-muted"}`}>
                                   {statusInfo?.label ?? f.followup_status}
                                 </span>
                                 <span className="text-xs text-muted">{fmtDate(f.created_at)}</span>
@@ -428,7 +428,7 @@ export default function CustomerDrawer({
                     })}
                     {followups.length > 3 && (
                       <button onClick={() => setActiveTab("activity")}
-                        className="text-xs text-accent hover:underline w-full text-center py-1">
+                        className="text-xs text-black hover:underline w-full text-center py-1">
                         +{followups.length - 3} more follow-ups →
                       </button>
                     )}
@@ -458,7 +458,7 @@ export default function CustomerDrawer({
                           ? "bg-blue-100 border-blue-400"
                           : a.mode === "payment"
                           ? "bg-emerald-100 border-emerald-500"
-                          : "bg-accent-soft border-accent"
+                          : "bg-neutral-100 border-black"
                       }`} />
                       <div className="bg-paper rounded-lg border border-line p-3">
                         <div className="flex items-start justify-between gap-2">
@@ -475,7 +475,7 @@ export default function CustomerDrawer({
                                 {(() => {
                                   const s = CRM_STATUSES.find(x => x.value === a.status);
                                   return (
-                                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s?.cls ?? "bg-zinc-100 text-zinc-500"}`}>
+                                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${s?.cls ?? "bg-surface-2 text-muted"}`}>
                                       {s?.label ?? a.status}
                                     </span>
                                   );
@@ -507,7 +507,7 @@ export default function CustomerDrawer({
                   Payment Follow-up History
                 </h3>
                 <button onClick={() => setShowInlinePayment(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent text-white text-xs font-medium hover:bg-accent/90">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-black text-white text-xs font-medium hover:bg-black/90">
                   <CreditCard size={12} /> Add Payment Follow-up
                 </button>
               </div>
@@ -519,7 +519,7 @@ export default function CustomerDrawer({
                   <CreditCard size={28} className="mx-auto text-muted/30 mb-2" />
                   <p className="text-sm text-muted">No payment follow-ups recorded yet.</p>
                   <button onClick={() => setShowInlinePayment(true)}
-                    className="mt-2 text-xs text-accent hover:underline">
+                    className="mt-2 text-xs text-black hover:underline">
                     Add first payment follow-up →
                   </button>
                 </div>
@@ -619,7 +619,7 @@ export default function CustomerDrawer({
                   <FileText size={28} className="mx-auto text-muted/30 mb-2" />
                   <p className="text-sm text-muted">No invoices for this customer yet.</p>
                   <button onClick={() => navigate("/billing")}
-                    className="mt-2 text-xs text-accent hover:underline">
+                    className="mt-2 text-xs text-black hover:underline">
                     Create first invoice →
                   </button>
                 </div>
@@ -630,7 +630,7 @@ export default function CustomerDrawer({
                     const statusCls: Record<string, string> = {
                       paid: "bg-emerald-100 text-emerald-700",
                       sent: "bg-blue-100 text-blue-700",
-                      draft: "bg-zinc-100 text-zinc-500",
+                      draft: "bg-surface-2 text-muted",
                       void: "bg-red-100 text-red-600",
                     };
                     return (
@@ -639,7 +639,7 @@ export default function CustomerDrawer({
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-ink">{inv.invoice_number}</span>
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusCls[inv.status] ?? "bg-zinc-100 text-zinc-500"}`}>
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusCls[inv.status] ?? "bg-surface-2 text-muted"}`}>
                               {inv.status}
                             </span>
                           </div>

@@ -10,7 +10,7 @@ import { RecordPaymentModal } from "./billing/RecordPaymentModal";
 
 // ── Status styling ─────────────────────────────────────────────
 const STATUS_CLS: Record<string, string> = {
-  draft: "bg-zinc-100 text-zinc-600",
+  draft: "bg-surface-2 text-muted",
   sent:  "bg-sky-100 text-sky-700",
   paid:  "bg-emerald-100 text-emerald-700",
   void:  "bg-red-100 text-red-600",
@@ -18,7 +18,7 @@ const STATUS_CLS: Record<string, string> = {
 const PAY_STATUS: Record<string, { label: string; cls: string }> = {
   paid:           { label: "Paid",           cls: "bg-emerald-100 text-emerald-700" },
   partially_paid: { label: "Partially Paid", cls: "bg-amber-100 text-amber-700" },
-  unpaid:         { label: "Unpaid",         cls: "bg-zinc-100 text-zinc-600" },
+  unpaid:         { label: "Unpaid",         cls: "bg-surface-2 text-muted" },
   void:           { label: "Void",           cls: "bg-red-100 text-red-600" },
 };
 
@@ -221,11 +221,11 @@ export default function BillingPage() {
   const hasFilters = searchQ || statusFilter !== "all" || payFilter !== "all" || dateFrom || dateTo;
 
   return (
-    <div className="space-y-6">
+    <div className="glass-scene p-4 sm:p-6 space-y-6">
 
       {/* ── Header ── */}
       <div className="flex flex-wrap items-center gap-3 justify-between">
-        <h1 className="text-xl font-semibold">Invoices</h1>
+        <h1 className="text-xl font-semibold text-ink">Invoices</h1>
         <div className="flex flex-wrap items-center gap-2">
           <button onClick={exportInvoicesExcel}
             className="flex items-center gap-1.5 px-3 py-2 border border-line rounded-md text-sm text-ink hover:bg-surface">
@@ -245,29 +245,29 @@ export default function BillingPage() {
       {/* ── Dashboard Stats (click a card to filter the list) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <button onClick={() => { setStatusFilter("all"); setPayFilter("all"); }}
-          className={`text-left rounded-xl p-4 border transition-all w-full cursor-pointer hover:shadow-md hover:-translate-y-0.5 bg-surface ${statusFilter === "all" && payFilter === "all" ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}>
+          className={`text-left rounded-xl p-4 border transition-all w-full cursor-pointer hover:shadow-md hover:-translate-y-0.5 frost ${statusFilter === "all" && payFilter === "all" ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}>
           <p className="text-xs text-muted mb-1">Total Invoices</p>
           <p className="text-2xl font-bold text-ink">{stats.total}</p>
         </button>
         <button onClick={() => setStatusFilter("paid")}
-          className={`text-left rounded-xl p-4 border transition-all w-full cursor-pointer hover:shadow-md hover:-translate-y-0.5 bg-surface ${statusFilter === "paid" ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}>
+          className={`text-left rounded-xl p-4 border transition-all w-full cursor-pointer hover:shadow-md hover:-translate-y-0.5 frost ${statusFilter === "paid" ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}>
           <p className="text-xs text-muted mb-1">Paid Invoices</p>
           <p className="text-2xl font-bold text-emerald-600">{stats.paid}</p>
         </button>
-        <div className="bg-surface border border-line rounded-xl p-4">
+        <div className="frost rounded-xl p-4">
           <p className="text-xs text-muted mb-1">Pending Amount</p>
           <p className="text-2xl font-bold text-amber-600">₹{fmt(stats.pendingAmt)}</p>
         </div>
         <button onClick={() => setPayFilter("partially_paid")}
-          className={`text-left rounded-xl p-4 border transition-all w-full cursor-pointer hover:shadow-md hover:-translate-y-0.5 bg-surface ${payFilter === "partially_paid" ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}>
+          className={`text-left rounded-xl p-4 border transition-all w-full cursor-pointer hover:shadow-md hover:-translate-y-0.5 frost ${payFilter === "partially_paid" ? "border-accent ring-2 ring-accent/20 shadow-sm" : "border-line hover:border-line/80"}`}>
           <p className="text-xs text-muted mb-1">Partially Paid</p>
           <p className="text-2xl font-bold text-blue-600">{stats.partiallyPaid}</p>
         </button>
-        <div className="bg-surface border border-line rounded-xl p-4">
+        <div className="frost rounded-xl p-4">
           <p className="text-xs text-muted mb-1">Overdue</p>
           <p className="text-2xl font-bold text-red-600">{stats.overdue}</p>
         </div>
-        <div className="bg-surface border border-line rounded-xl p-4">
+        <div className="frost rounded-xl p-4">
           <p className="text-xs text-muted mb-1">Total Revenue</p>
           <p className="text-2xl font-bold text-accent">₹{fmt(stats.revenue)}</p>
         </div>
@@ -278,12 +278,12 @@ export default function BillingPage() {
         <div className="relative flex-1 min-w-[200px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
           <input
-            className="w-full pl-8 pr-3 py-2 border border-line rounded-md text-sm bg-paper outline-none focus:border-accent"
+            className="w-full pl-8 pr-3 py-2 border border-line rounded-md text-sm frost-input outline-none focus:border-accent"
             placeholder="Invoice #, customer name or phone…"
             value={searchQ} onChange={e => setSearchQ(e.target.value)}
           />
         </div>
-        <select className="border border-line rounded-md px-3 py-2 text-sm bg-paper outline-none focus:border-accent"
+        <select className="border border-line rounded-md px-3 py-2 text-sm frost-input outline-none focus:border-accent"
           value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
           <option value="all">All Statuses</option>
           <option value="draft">Draft</option>
@@ -291,7 +291,7 @@ export default function BillingPage() {
           <option value="paid">Paid</option>
           <option value="void">Void</option>
         </select>
-        <select className="border border-line rounded-md px-3 py-2 text-sm bg-paper outline-none focus:border-accent"
+        <select className="border border-line rounded-md px-3 py-2 text-sm frost-input outline-none focus:border-accent"
           value={payFilter} onChange={e => setPayFilter(e.target.value)}>
           <option value="all">All Payment Status</option>
           <option value="unpaid">Unpaid</option>
@@ -299,9 +299,9 @@ export default function BillingPage() {
           <option value="paid">Paid</option>
           <option value="void">Void</option>
         </select>
-        <input type="date" className="border border-line rounded-md px-3 py-2 text-sm bg-paper outline-none focus:border-accent"
+        <input type="date" className="border border-line rounded-md px-3 py-2 text-sm frost-input outline-none focus:border-accent"
           value={dateFrom} onChange={e => setDateFrom(e.target.value)} title="From date" />
-        <input type="date" className="border border-line rounded-md px-3 py-2 text-sm bg-paper outline-none focus:border-accent"
+        <input type="date" className="border border-line rounded-md px-3 py-2 text-sm frost-input outline-none focus:border-accent"
           value={dateTo} onChange={e => setDateTo(e.target.value)} title="To date" />
         {hasFilters && (
           <button onClick={() => { setSearchQ(""); setStatusFilter("all"); setPayFilter("all"); setDateFrom(""); setDateTo(""); }}
@@ -312,7 +312,7 @@ export default function BillingPage() {
       </div>
 
       {/* ── Invoice Table ── */}
-      <div className="bg-surface border border-line rounded-lg overflow-hidden">
+      <div className="frost rounded-2xl overflow-hidden">
         {filtered.length === 0 ? (
           <p className="p-6 text-sm text-muted">
             {invoices.length === 0 ? "No invoices yet." : "No invoices match the selected filters."}

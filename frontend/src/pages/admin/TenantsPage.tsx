@@ -22,16 +22,16 @@ export default function TenantsPage() {
   useEffect(() => { refresh(); }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="ws-scene p-5 sm:p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Tenants</h1>
+        <h1 className="text-2xl font-extrabold font-display bg-gradient-to-r from-ink to-info bg-clip-text text-transparent">Tenants</h1>
         <button onClick={() => setShowForm(true)}
           className="inline-flex items-center gap-2 rounded-md bg-accent text-white px-3 py-2 text-sm font-medium hover:opacity-90">
           <Plus size={16} /> Create tenant
         </button>
       </div>
 
-      <div className="bg-surface border border-line rounded-lg overflow-hidden">
+      <div className="ws-card overflow-hidden">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
             <th className="px-4 py-3">Name</th><th className="px-4 py-3">Slug</th>
@@ -112,12 +112,12 @@ function CreateTenantModal({ onClose, onCreated }: { onClose: () => void; onCrea
     }
   }
 
-  const inputCls = "mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 outline-none focus:border-accent";
+  const inputCls = "mt-1 w-full rounded-md ws-input px-3 py-2 outline-none focus:border-accent";
   const labelCls = "text-xs font-medium uppercase tracking-wide text-muted";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
-      <div className="w-full max-w-md bg-surface border border-line rounded-lg p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8 overflow-y-auto" onClick={onClose}>
+      <div className="w-full max-w-md ws-card p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Create tenant</h2>
           <button onClick={onClose} className="text-muted hover:text-ink"><X size={18} /></button>

@@ -10,7 +10,7 @@ type PrintSize = "a4" | "half" | "small";
 
 // ── Constants ─────────────────────────────────────────────────
 const STATUS_CLS: Record<string, string> = {
-  draft: "bg-zinc-100 text-zinc-600",
+  draft: "bg-surface-2 text-muted",
   sent:  "bg-sky-100 text-sky-700",
   paid:  "bg-emerald-100 text-emerald-700",
   void:  "bg-red-100 text-red-600",
@@ -437,18 +437,18 @@ export default function InvoiceDetailPage() {
         <div className="print-selected bg-white border border-line rounded-xl shadow-sm overflow-hidden">
 
           {/* Header */}
-          <div className="flex items-start justify-between p-8 pb-6 border-b border-gray-100">
+          <div className="flex items-start justify-between p-8 pb-6 border-b border-line">
             <div>
               {companyLogo && <img src={companyLogo} alt="logo" style={{ maxHeight: "56px", maxWidth: "160px", objectFit: "contain", marginBottom: "8px" }} />}
-              <div className="text-2xl font-bold text-gray-900">{companyName}</div>
-              {companyEmail && <div className="text-sm text-gray-500 mt-1">{companyEmail}</div>}
-              {companyPhone && <div className="text-sm text-gray-500">{companyPhone}</div>}
-              {companyAddr  && <div className="text-xs text-gray-400 mt-1 whitespace-pre-line leading-snug">{companyAddr}</div>}
-              {companyGst   && <div className="text-xs text-gray-400 mt-1">GST: {companyGst}</div>}
+              <div className="text-2xl font-bold text-ink">{companyName}</div>
+              {companyEmail && <div className="text-sm text-muted mt-1">{companyEmail}</div>}
+              {companyPhone && <div className="text-sm text-muted">{companyPhone}</div>}
+              {companyAddr  && <div className="text-xs text-muted mt-1 whitespace-pre-line leading-snug">{companyAddr}</div>}
+              {companyGst   && <div className="text-xs text-muted mt-1">GST: {companyGst}</div>}
             </div>
             <div className="text-right">
               <div className="text-3xl font-extrabold text-[#0F6E56] tracking-wide">INVOICE</div>
-              <div className="font-mono font-bold text-gray-800 text-lg mt-1">{invoice.invoice_number}</div>
+              <div className="font-mono font-bold text-ink text-lg mt-1">{invoice.invoice_number}</div>
               <div className="mt-2">
                 <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${STATUS_CLS[invoice.status] ?? ""}`}>
                   {invoice.status.toUpperCase()}
@@ -458,17 +458,17 @@ export default function InvoiceDetailPage() {
           </div>
 
           {/* Bill To + Invoice Details */}
-          <div className="grid grid-cols-2 gap-8 px-8 py-6 border-b border-gray-100">
+          <div className="grid grid-cols-2 gap-8 px-8 py-6 border-b border-line">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Bill To</div>
-              <div className="font-semibold text-gray-900 text-base">{invoice.customer_name}</div>
-              {invoice.customer_phone   && <div className="text-sm text-gray-600 mt-1">{invoice.customer_phone}</div>}
-              {invoice.customer_email   && <div className="text-sm text-gray-600">{invoice.customer_email}</div>}
-              {invoice.customer_address && <div className="text-sm text-gray-600 mt-1 whitespace-pre-line leading-snug">{invoice.customer_address}</div>}
-              {invoice.customer_gst     && <div className="text-xs text-gray-500 mt-1">GST: {invoice.customer_gst}</div>}
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">Bill To</div>
+              <div className="font-semibold text-ink text-base">{invoice.customer_name}</div>
+              {invoice.customer_phone   && <div className="text-sm text-muted mt-1">{invoice.customer_phone}</div>}
+              {invoice.customer_email   && <div className="text-sm text-muted">{invoice.customer_email}</div>}
+              {invoice.customer_address && <div className="text-sm text-muted mt-1 whitespace-pre-line leading-snug">{invoice.customer_address}</div>}
+              {invoice.customer_gst     && <div className="text-xs text-muted mt-1">GST: {invoice.customer_gst}</div>}
             </div>
             <div className="text-sm space-y-2">
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Invoice Details</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">Invoice Details</div>
               {[
                 ["Invoice No",  invoice.invoice_number, true],
                 ["Issue Date",  invoice.issue_date,     false],
@@ -476,15 +476,15 @@ export default function InvoiceDetailPage() {
                 ...(invoice.payment_terms ? [["Payment Terms", invoice.payment_terms, false]] : []),
               ].map(([k, v, mono]) => (
                 <div key={String(k)} className="flex justify-between">
-                  <span className="text-gray-500">{k}</span>
-                  <span className={`text-gray-800 ${mono ? "font-mono font-semibold text-gray-900" : ""}`}>{v}</span>
+                  <span className="text-muted">{k}</span>
+                  <span className={`text-ink ${mono ? "font-mono font-semibold text-ink" : ""}`}>{v}</span>
                 </div>
               ))}
               <div className="flex justify-between pt-1">
-                <span className="text-gray-500">Payment Status</span>
+                <span className="text-muted">Payment Status</span>
                 <span className={`font-semibold text-xs ${
                   pStatus === "Paid" ? "text-emerald-600" : pStatus === "Partially Paid" ? "text-amber-600" :
-                  pStatus === "Void" ? "text-red-600" : "text-gray-500"
+                  pStatus === "Void" ? "text-red-600" : "text-muted"
                 }`}>{pStatus}</span>
               </div>
             </div>
@@ -492,11 +492,11 @@ export default function InvoiceDetailPage() {
 
           {/* Line Items */}
           <div className="px-8 py-6">
-            <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Line Items</div>
+            <div className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">Line Items</div>
             {invoice.items && invoice.items.length > 0 ? (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b-2 border-gray-200 text-xs uppercase tracking-wide text-gray-400">
+                  <tr className="border-b-2 border-line text-xs uppercase tracking-wide text-muted">
                     <th className="pb-2 text-left font-semibold w-8">S.No</th>
                     <th className="pb-2 text-left font-semibold">Description / Product</th>
                     <th className="pb-2 text-right font-semibold w-16">Qty</th>
@@ -507,25 +507,25 @@ export default function InvoiceDetailPage() {
                 </thead>
                 <tbody>
                   {invoice.items.map((item, idx) => (
-                    <tr key={item.id} className="border-b border-gray-100 last:border-0">
-                      <td className="py-2.5 text-gray-400 text-xs">{idx + 1}</td>
-                      <td className="py-2.5 text-gray-800">{item.description}</td>
-                      <td className="py-2.5 text-right text-gray-700">{item.quantity}</td>
-                      <td className="py-2.5 text-right font-mono text-gray-700">₹{fmt(item.unit_price)}</td>
-                      <td className="py-2.5 text-right text-gray-500">{item.tax_percent}%</td>
-                      <td className="py-2.5 text-right font-mono font-semibold text-gray-900">₹{fmt(item.line_total)}</td>
+                    <tr key={item.id} className="border-b border-line last:border-0">
+                      <td className="py-2.5 text-muted text-xs">{idx + 1}</td>
+                      <td className="py-2.5 text-ink">{item.description}</td>
+                      <td className="py-2.5 text-right text-ink-soft">{item.quantity}</td>
+                      <td className="py-2.5 text-right font-mono text-ink-soft">₹{fmt(item.unit_price)}</td>
+                      <td className="py-2.5 text-right text-muted">{item.tax_percent}%</td>
+                      <td className="py-2.5 text-right font-mono font-semibold text-ink">₹{fmt(item.line_total)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            ) : <p className="text-sm text-gray-400">No line items.</p>}
+            ) : <p className="text-sm text-muted">No line items.</p>}
           </div>
 
           {/* Totals */}
-          <div className="px-8 py-5 border-t border-gray-100 bg-gray-50/50">
+          <div className="px-8 py-5 border-t border-line bg-surface-2/50">
             <div className="flex justify-end">
               <div className="w-72 space-y-2 text-sm">
-                <div className="flex justify-between text-gray-500">
+                <div className="flex justify-between text-muted">
                   <span>Subtotal</span><span className="font-mono">₹{fmt(invoice.subtotal)}</span>
                 </div>
                 {Number(invoice.discount_total ?? 0) > 0 && (
@@ -533,15 +533,15 @@ export default function InvoiceDetailPage() {
                     <span>Discount</span><span className="font-mono">−₹{fmt(invoice.discount_total ?? 0)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-gray-500">
+                <div className="flex justify-between text-muted">
                   <span>Tax</span><span className="font-mono">₹{fmt(invoice.tax_total)}</span>
                 </div>
                 {Number(invoice.other_charges ?? 0) > 0 && (
-                  <div className="flex justify-between text-gray-500">
+                  <div className="flex justify-between text-muted">
                     <span>Other Charges</span><span className="font-mono">₹{fmt(invoice.other_charges ?? 0)}</span>
                   </div>
                 )}
-                <div className="flex justify-between font-bold text-base border-t-2 border-gray-300 pt-2 text-gray-900">
+                <div className="flex justify-between font-bold text-base border-t-2 border-line pt-2 text-ink">
                   <span>Grand Total</span><span className="font-mono">₹{fmt(invoice.total)}</span>
                 </div>
                 {Number(invoice.amount_paid) > 0 && (
@@ -549,7 +549,7 @@ export default function InvoiceDetailPage() {
                     <span>Amount Paid</span><span className="font-mono">₹{fmt(invoice.amount_paid)}</span>
                   </div>
                 )}
-                <div className={`flex justify-between font-bold text-base border-t border-gray-200 pt-2 ${
+                <div className={`flex justify-between font-bold text-base border-t border-line pt-2 ${
                   Number(invoice.balance_due) > 0.001 ? "text-red-600" : "text-emerald-600"
                 }`}>
                   <span>Balance Due</span><span className="font-mono">₹{fmt(invoice.balance_due)}</span>
@@ -560,11 +560,11 @@ export default function InvoiceDetailPage() {
 
           {/* Payment History */}
           {invoice.payments && invoice.payments.length > 0 && (
-            <div className="px-8 py-5 border-t border-gray-100">
-              <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3">Payment History</div>
+            <div className="px-8 py-5 border-t border-line">
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted mb-3">Payment History</div>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-400">
+                  <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
                     <th className="pb-2 text-left font-semibold">Date</th>
                     <th className="pb-2 text-left font-semibold">Method</th>
                     <th className="pb-2 text-left font-semibold">Reference</th>
@@ -574,10 +574,10 @@ export default function InvoiceDetailPage() {
                 </thead>
                 <tbody>
                   {invoice.payments.map((p) => (
-                    <tr key={p.id} className="border-b border-gray-100 last:border-0">
-                      <td className="py-2 text-gray-700">{p.payment_date}</td>
-                      <td className="py-2 text-gray-600 capitalize">{p.method.replace("_", " ")}</td>
-                      <td className="py-2 text-gray-500">{p.reference ?? "—"}</td>
+                    <tr key={p.id} className="border-b border-line last:border-0">
+                      <td className="py-2 text-ink-soft">{p.payment_date}</td>
+                      <td className="py-2 text-muted capitalize">{p.method.replace("_", " ")}</td>
+                      <td className="py-2 text-muted">{p.reference ?? "—"}</td>
                       <td className="py-2 text-right font-mono font-semibold text-emerald-700">₹{fmt(p.amount)}</td>
                       <td className="py-2 text-right no-print">
                         <button onClick={() => deletePayment(p.id)} className="text-danger hover:underline text-xs">
@@ -593,32 +593,32 @@ export default function InvoiceDetailPage() {
 
           {/* Notes & Terms */}
           {(invoice.notes || invoice.terms) && (
-            <div className="px-8 py-5 border-t border-gray-100 space-y-4">
+            <div className="px-8 py-5 border-t border-line space-y-4">
               {invoice.notes && (
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1.5">Notes</div>
-                  <p className="text-sm text-gray-600 whitespace-pre-line">{invoice.notes}</p>
+                  <div className="text-xs font-semibold uppercase tracking-widest text-muted mb-1.5">Notes</div>
+                  <p className="text-sm text-muted whitespace-pre-line">{invoice.notes}</p>
                 </div>
               )}
               {invoice.terms && (
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1.5">Terms &amp; Conditions</div>
-                  <p className="text-sm text-gray-600 whitespace-pre-line leading-relaxed">{invoice.terms}</p>
+                  <div className="text-xs font-semibold uppercase tracking-widest text-muted mb-1.5">Terms &amp; Conditions</div>
+                  <p className="text-sm text-muted whitespace-pre-line leading-relaxed">{invoice.terms}</p>
                 </div>
               )}
             </div>
           )}
 
           {/* Footer */}
-          <div className="px-8 py-6 border-t border-gray-100 flex items-end justify-between">
+          <div className="px-8 py-6 border-t border-line flex items-end justify-between">
             <div>
               <p className="text-sm font-semibold text-[#0F6E56]">Thank you for your business!</p>
-              <p className="text-xs text-gray-400 mt-0.5">{companyName}</p>
+              <p className="text-xs text-muted mt-0.5">{companyName}</p>
             </div>
             <div className="text-right">
-              <div className="text-xs text-gray-400 mb-8">Authorized Signature</div>
+              <div className="text-xs text-muted mb-8">Authorized Signature</div>
               <div className="border-b border-gray-400 w-40"></div>
-              <div className="text-xs text-gray-400 mt-1">{companyName}</div>
+              <div className="text-xs text-muted mt-1">{companyName}</div>
             </div>
           </div>
         </div>

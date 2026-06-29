@@ -202,12 +202,13 @@ export default function POSPage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:h-[calc(100vh-8rem)]">
+    <div className="glass-scene p-4 sm:p-6">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 lg:min-h-[calc(100vh-11rem)]">
 
       {/* ── Left: scanner + product search ── */}
-      <div className="flex flex-col gap-4 w-full lg:w-80 lg:flex-shrink-0">
-        <h1 className="text-xl font-semibold flex items-center gap-2">
-          <ShoppingCart size={20} /> Point of Sale
+      <div className="frost rounded-2xl p-4 flex flex-col gap-4 w-full lg:w-80 lg:flex-shrink-0">
+        <h1 className="text-xl font-semibold flex items-center gap-2 text-ink">
+          <ShoppingCart size={20} className="text-accent" /> Point of Sale
         </h1>
 
         {/* Scanner input */}
@@ -221,7 +222,7 @@ export default function POSPage() {
               <input
                 ref={scanRef}
                 autoFocus
-                className="w-full rounded-lg border-2 border-accent bg-paper pl-9 pr-3 py-3 text-sm font-mono outline-none focus:ring-2 focus:ring-accent/30"
+                className="w-full rounded-lg border-2 border-accent frost-input pl-9 pr-3 py-3 text-sm font-mono outline-none focus:ring-2 focus:ring-accent/30"
                 placeholder="Scan or type code…"
                 value={scanInput}
                 onChange={(e) => { setScanInput(e.target.value); setScanError(null); }}
@@ -257,7 +258,7 @@ export default function POSPage() {
       </div>
 
       {/* ── Right: cart + checkout ── */}
-      <div className="flex-1 flex flex-col bg-surface border border-line rounded-xl overflow-hidden min-h-[55vh] lg:min-h-0">
+      <div className="flex-1 flex flex-col frost rounded-2xl overflow-hidden min-h-[55vh] lg:min-h-0">
 
         {/* Cart header */}
         <div className="px-5 py-3 border-b border-line flex items-center justify-between">
@@ -321,13 +322,13 @@ export default function POSPage() {
         </div>
 
         {/* Checkout panel */}
-        <div className="border-t border-line px-5 py-4 space-y-3 bg-paper/60">
+        <div className="border-t border-white/50 px-5 py-4 space-y-3 bg-white/30">
           {/* Customer + payment method */}
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs font-medium uppercase tracking-wide text-muted">Customer</span>
               <select
-                className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+                className="mt-1 w-full rounded-md border border-line frost-input px-3 py-2 text-sm outline-none focus:border-accent"
                 value={customerId}
                 onChange={(e) => pickCustomer(e.target.value)}>
                 <option value="">Walk-in customer</option>
@@ -339,7 +340,7 @@ export default function POSPage() {
             <label className="block">
               <span className="text-xs font-medium uppercase tracking-wide text-muted">Payment Method</span>
               <select
-                className="mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent"
+                className="mt-1 w-full rounded-md border border-line frost-input px-3 py-2 text-sm outline-none focus:border-accent"
                 value={method}
                 onChange={(e) => { setMethod(e.target.value); refocus(); }}>
                 {METHODS.map((m) => (
@@ -379,6 +380,7 @@ export default function POSPage() {
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
@@ -395,7 +397,7 @@ function QuickList({ onAdd, products }: { onAdd: (p: Product) => void; products:
   return (
     <div className="space-y-2">
       <input
-        className="w-full rounded-md border border-line bg-paper px-3 py-2 text-xs outline-none focus:border-accent"
+        className="w-full rounded-md border border-line frost-input px-3 py-2 text-xs outline-none focus:border-accent"
         placeholder="Search products…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}

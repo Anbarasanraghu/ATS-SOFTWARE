@@ -17,7 +17,7 @@ const blankForm = (): EditForm => ({
 
 type MoveForm = { movement_type: string; quantity: string; unit_cost: string; reference: string; notes: string };
 
-const inputCls = "mt-1 w-full rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent";
+const inputCls = "mt-1 w-full rounded-xl neu-inset px-3 py-2 text-sm outline-none focus:border-accent";
 
 export default function ProductsPage() {
   const [products, setProducts]       = useState<Product[]>([]);
@@ -129,7 +129,7 @@ export default function ProductsPage() {
   const productForm = (isEdit: boolean) => (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
       <form onSubmit={isEdit ? submitEdit : submitCreate}
-        className="bg-surface border border-line rounded-lg p-6 w-full max-w-xl space-y-4 shadow-lg max-h-[90vh] overflow-y-auto">
+        className="neu rounded-2xl p-6 w-full max-w-xl space-y-4 shadow-lg max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">{isEdit ? "Edit Product" : "New Product"}</h2>
           <button type="button" onClick={closeModal} className="text-muted hover:text-ink"><X size={18} /></button>
@@ -200,7 +200,7 @@ export default function ProductsPage() {
 
   const moveModal = movingProduct && (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4">
-      <form onSubmit={submitMove} className="bg-surface border border-line rounded-lg p-6 w-full max-w-md space-y-4 shadow-lg">
+      <form onSubmit={submitMove} className="neu rounded-2xl p-6 w-full max-w-md space-y-4 shadow-lg">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">Stock Movement — {movingProduct.name}</h2>
           <button type="button" onClick={closeModal} className="text-muted hover:text-ink"><X size={18} /></button>
@@ -247,7 +247,7 @@ export default function ProductsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="neu-scene p-5 sm:p-6 space-y-6">
       <div className="flex items-center gap-3">
         <h1 className="text-xl font-semibold">Inventory</h1>
         <div className="flex border border-line rounded-md overflow-hidden text-sm ml-2">
@@ -261,7 +261,7 @@ export default function ProductsPage() {
         <div className="ml-auto flex items-center gap-3">
           {tab === "products" && (
             <>
-              <input className="rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent w-48"
+              <input className="rounded-xl neu-inset px-3 py-2 text-sm outline-none focus:border-accent w-48"
                 placeholder="Search…" value={search} onChange={(e) => setSearch(e.target.value)} />
               <button onClick={openCreate}
                 className="flex items-center gap-2 rounded-md bg-accent text-white px-4 py-2 text-sm font-medium">
@@ -274,7 +274,7 @@ export default function ProductsPage() {
 
       {/* Products tab */}
       {tab === "products" && (
-        <div className="bg-surface border border-line rounded-lg overflow-hidden">
+        <div className="neu rounded-2xl overflow-hidden">
           {filtered.length === 0 ? (
             <p className="p-6 text-sm text-muted">No products yet.</p>
           ) : (
@@ -338,13 +338,13 @@ export default function ProductsPage() {
       {tab === "categories" && (
         <div className="space-y-4">
           <form onSubmit={addCategory} className="flex gap-2">
-            <input className="rounded-md border border-line bg-paper px-3 py-2 text-sm outline-none focus:border-accent flex-1"
+            <input className="rounded-xl neu-inset px-3 py-2 text-sm outline-none focus:border-accent flex-1"
               placeholder="Category name…" value={catName} onChange={(e) => setCatName(e.target.value)} required />
             <button type="submit" className="rounded-md bg-accent text-white px-4 py-2 text-sm font-medium flex items-center gap-1">
               <Plus size={14} /> Add
             </button>
           </form>
-          <div className="bg-surface border border-line rounded-lg divide-y divide-line">
+          <div className="neu rounded-2xl divide-y divide-line">
             {categories.length === 0 && <p className="px-4 py-3 text-sm text-muted">No categories yet.</p>}
             {categories.map((c) => (
               <div key={c.id} className="flex items-center justify-between px-4 py-3 text-sm">
@@ -359,7 +359,7 @@ export default function ProductsPage() {
       {/* Suppliers tab */}
       {tab === "suppliers" && (
         <div className="space-y-4">
-          <form onSubmit={addSupplier} className="bg-surface border border-line rounded-lg p-4 grid grid-cols-2 gap-3">
+          <form onSubmit={addSupplier} className="neu rounded-2xl p-4 grid grid-cols-2 gap-3">
             <label className="block">
               <span className="text-xs font-medium uppercase tracking-wide text-muted">Name *</span>
               <input required className={inputCls} value={supForm.name} onChange={(e) => setSupForm({ ...supForm, name: e.target.value })} />
@@ -382,7 +382,7 @@ export default function ProductsPage() {
               </button>
             </div>
           </form>
-          <div className="bg-surface border border-line rounded-lg divide-y divide-line">
+          <div className="neu rounded-2xl divide-y divide-line">
             {suppliers.length === 0 && <p className="px-4 py-3 text-sm text-muted">No suppliers yet.</p>}
             {suppliers.map((s) => (
               <div key={s.id} className="flex items-center justify-between px-4 py-3 text-sm">

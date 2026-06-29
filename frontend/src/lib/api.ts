@@ -2,12 +2,24 @@ const BASE = "http://localhost:8000";
 
 let token: string | null = localStorage.getItem("erp_token");
 
+// ── GET response cache ────────────────────────────────────────
+// Switching tabs re-mounts pages, which refetch on mount. We cache GET
+// responses in memory so a revisit within the TTL is instant (no spinner),
+// and we de-duplicate concurrent identical GETs. ANY write (POST/PUT/PATCH/
+// DELETE) clears the cache so the next read is fresh.
+const _getCache = new Map<string, { ts: number; data: unknown }>();
+const _inflight = new Map<string, Promise<unknown>>();
+const GET_TTL = 60_000; // 60s — long enough that tab-switching never reloads
+
+export function clearGetCache() { _getCache.clear(); _inflight.clear(); }
+
 export function setToken(t: string | null) {
   token = t;
   if (t) localStorage.setItem("erp_token", t);
   else localStorage.removeItem("erp_token");
-  // Session/tenant changed — drop cached reference data so one tenant never
-  // sees another's categories / suppliers / fields.
+  // Session/tenant changed — drop every cache so one tenant never sees
+  // another's data.
+  clearGetCache();
   clearReferenceCache();
   invalidateCompanyCache();
 }
@@ -15,26 +27,51 @@ export function getToken() { return token; }
 
 async function request<T>(
   path: string,
-  options: { method?: string; body?: unknown; auth?: boolean } = {},
+  options: { method?: string; body?: unknown; auth?: boolean; cache?: boolean } = {},
 ): Promise<T> {
-  const { method = "GET", body, auth = true } = options;
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (auth && token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`${BASE}${path}`, {
-    method, headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    if (res.status === 401) {
-      setToken(null);
-      window.dispatchEvent(new CustomEvent("auth:expired"));
-    }
-    let detail = res.statusText;
-    try { const d = await res.json(); if (typeof d.detail === "string") detail = d.detail; } catch { /* */ }
-    throw new Error(detail);
+  const { method = "GET", body, auth = true, cache = true } = options;
+  const isGet = method === "GET";
+  const useCache = isGet && cache;
+
+  if (useCache) {
+    const hit = _getCache.get(path);
+    if (hit && Date.now() - hit.ts < GET_TTL) return hit.data as T;
+    const pending = _inflight.get(path);
+    if (pending) return pending as Promise<T>;   // de-dupe concurrent calls
   }
-  if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+
+  const doFetch = (async (): Promise<T> => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (auth && token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`${BASE}${path}`, {
+      method, headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      if (res.status === 401) {
+        setToken(null);
+        window.dispatchEvent(new CustomEvent("auth:expired"));
+      }
+      let detail = res.statusText;
+      try { const d = await res.json(); if (typeof d.detail === "string") detail = d.detail; } catch { /* */ }
+      throw new Error(detail);
+    }
+    if (res.status === 204) {
+      if (!isGet) clearGetCache();        // a write happened → invalidate reads
+      return undefined as T;
+    }
+    const data = (await res.json()) as T;
+    if (isGet) { if (cache) _getCache.set(path, { ts: Date.now(), data }); }
+    else { clearGetCache(); }             // a write happened → invalidate reads
+    return data;
+  })();
+
+  if (useCache) {
+    _inflight.set(path, doFetch as Promise<unknown>);
+    try { return await doFetch; }
+    finally { _inflight.delete(path); }
+  }
+  return doFetch;
 }
 
 // ── Auth ─────────────────────────────────────────────────────
@@ -733,3 +770,17 @@ export const teamApi = {
   }) => request<TeamUser>(`/team/users/${id}`, { method: "PATCH", body }),
   deleteUser: (id: string) => request(`/team/users/${id}`, { method: "DELETE" }),
 };
+
+// ── Prefetch ─────────────────────────────────────────────────
+// Warm the GET cache in the background right after login so the first
+// navigation to the common screens is instant (no first-load spinner).
+export function prefetchCommon() {
+  const tasks = [
+    () => api.reportSummary(),
+    () => api.reportByMonth(),
+    () => api.listInvoices(),
+    () => api.listCustomers(),
+    () => api.listProducts(),
+  ];
+  for (const t of tasks) { try { t().catch(() => {}); } catch { /* ignore */ } }
+}

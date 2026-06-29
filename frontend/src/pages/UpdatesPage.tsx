@@ -125,12 +125,12 @@ export default function UpdatesPage() {
   const monthLabel = month.toLocaleString(undefined, { month: "long", year: "numeric" });
 
   return (
-    <div className="space-y-6">
+    <div className="neu-scene p-5 sm:p-6 space-y-6">
       <h1 className="text-xl font-semibold">Updates</h1>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Calendar */}
-        <div className="bg-surface border border-line rounded-lg p-4">
+        <div className="neu rounded-2xl p-4">
           <div className="flex items-center justify-between mb-3">
             <button onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))} className="p-1 rounded hover:bg-line/50"><ChevronLeft size={18} /></button>
             <div className="font-medium text-sm">{monthLabel}</div>
@@ -162,7 +162,7 @@ export default function UpdatesPage() {
         </div>
 
         {/* Feed */}
-        <div className="bg-surface border border-line rounded-lg overflow-hidden">
+        <div className="neu rounded-2xl overflow-hidden">
           <div className="px-4 py-3 border-b border-line">
             <div className="text-sm font-medium">
               {selectedDay ? `Activity on ${selectedDay}` : "Recent activity"}

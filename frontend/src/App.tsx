@@ -25,6 +25,7 @@ import TenantDetailPage from "./pages/admin/TenantDetailPage";
 import SettingsPage from "./pages/SettingsPage";
 import AssistantPage from "./pages/AssistantPage";
 import TeamPage from "./pages/TeamPage";
+import DashboardPage from "./pages/DashboardPage";
 
 export default function App() {
   const { me, loading } = useAuth();
@@ -58,13 +59,14 @@ export default function App() {
         <Route path="/employees"      element={<EmployeesPage />} />
         <Route path="/leave-requests" element={<LeaveRequestsPage />} />
         <Route path="/payroll"        element={<PayrollPage />} />
+        <Route path="/dashboard"           element={<DashboardPage />} />
         <Route path="/assistant"           element={<AssistantPage />} />
         <Route path="/team"                element={(me.user.is_platform_admin || ["owner", "admin"].includes(me.user.role)) ? <TeamPage /> : <Navigate to="/billing" replace />} />
         <Route path="/settings"            element={(me.user.is_platform_admin || ["owner", "admin"].includes(me.user.role)) ? <SettingsPage /> : <Navigate to="/billing" replace />} />
         {/* Platform-admin only — non-admins are bounced even via direct URL. */}
         <Route path="/admin/tenants"      element={me.user.is_platform_admin ? <TenantsPage /> : <Navigate to="/billing" replace />} />
         <Route path="/admin/tenants/:id"  element={me.user.is_platform_admin ? <TenantDetailPage /> : <Navigate to="/billing" replace />} />
-        <Route path="*" element={<Navigate to="/billing" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AppShell>
   );

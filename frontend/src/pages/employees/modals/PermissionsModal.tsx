@@ -36,7 +36,7 @@ export function PermissionsModal({ employeeId, employeeName, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-line">
           <div className="flex items-center gap-2">
             <Shield size={18} className="text-accent" />
@@ -60,7 +60,7 @@ export function PermissionsModal({ employeeId, employeeName, onClose }: Props) {
                     <input type="checkbox" className="sr-only" checked={p.has_access} onChange={() => toggle(p.module)} />
                     <div onClick={() => toggle(p.module)}
                       className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${p.has_access ? "bg-accent" : "bg-gray-200"}`}>
-                      <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${p.has_access ? "translate-x-5" : ""}`} />
+                      <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-surface rounded-full shadow transition-transform ${p.has_access ? "translate-x-5" : ""}`} />
                     </div>
                   </div>
                 </label>
