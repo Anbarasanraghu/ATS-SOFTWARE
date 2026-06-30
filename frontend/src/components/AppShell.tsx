@@ -136,6 +136,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
           className="mt-1 flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-muted hover:text-danger hover:bg-danger-soft transition-colors duration-150">
           <LogOut size={15} /> Sign out
         </button>
+        <p className="mt-2 px-3 pb-1 text-[9px] text-muted/40 text-center tracking-wide select-none">
+          Developed by AGZUS TECHNOLOGY SOLUTION
+        </p>
       </div>
     </div>
   );

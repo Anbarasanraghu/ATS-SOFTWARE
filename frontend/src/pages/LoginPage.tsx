@@ -364,6 +364,11 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Developer credit */}
+            <p className="mt-5 text-center text-[10px] text-[#C8C8D8] tracking-wide">
+              Developed by <span className="font-semibold">AGZUS TECHNOLOGY SOLUTION</span>
+            </p>
+
           </div>
         </div>
 
